@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MCBBS Extender
 // @namespace    https://nicocat.cc
-// @version      release-2.2.1
+// @version      release-2.2.2
 // @description  MCBBS行为拓展/样式修复
 // @author       nicocat
 // @originAuthor Zapicc
@@ -57,7 +57,7 @@
         console.debug = function () {};
     }
     // 基本信息初始化
-    let version = "v2.2.1";
+    let version = "v2.2.2";
     let vercode = 121140;
     let valueList = {};
     let configList = [];
@@ -259,6 +259,13 @@
         };
     })();
 
+        const isLogin = document.querySelector(
+        'a[href^="member.php?mod=logging&action=login"]',
+    )
+        ? false
+        : true;
+
+
     // 对外暴露API
     let MExt = {
         ValueStorage: {
@@ -277,6 +284,7 @@
             appendStyle: appendStyle,
             getRequest: getRequest,
             getEditorRows,
+            isLogin,
         },
     };
     unsafeWindow.MExt = MExt;
@@ -587,10 +595,7 @@
     let dlg = MExt.debugLog;
     let Stg = MExt.ValueStorage;
     let observe = MExt.observe;
-    let appendEditor = () => {
-        let editorContainer = document.createElement("p");
-        editorContainer.className = "MExt";
-    };
+    const isLogin = MExt.Units.isLogin
     let fixCodeBlock = {
         style: /* css */ `pre:not([id]) code {
     background: #f7f7f7;
@@ -790,6 +795,10 @@ pre:not([id]) code br{
             },
         ],
         core: () => {
+            if (!isLogin) {
+                dlg("未登录，已禁用消息轮询");
+                return;
+            }
             let getRequest = MExt.Units.getRequest;
             let checkNotifica = (noNotifica = false) => {
                 if (localStorage.getItem("MExt_ActiveQueryId") != queryId) {
@@ -2544,6 +2553,11 @@ background-position: center;
         ],
 
         core: () => {
+            dlg("自动签到已启用");
+            if (!isLogin) {
+                dlg("未登录，已禁用签到任务");
+                return;
+            }
             if (location.href.includes("dc_signin:sign")) {
                 const msgbox = document.querySelector("#messagetext");
 
@@ -2610,6 +2624,10 @@ background-position: center;
 
         core: () => {
             dlg("自动任务已启用");
+            if (!isLogin) {
+                dlg("未登录，已禁用签到任务");
+                return;
+            }
             const taskArr = ["1", "3", "18", "19", "25"];
 
             const parsePageDOM = async (url) => {
