@@ -228,35 +228,42 @@
 
     // 编辑器小按钮行列
     const getEditorRows = (() => {
-        let cache = null;
+        function ensureId(el, index) {
+            if (!el.id) {
+                el.id = "e_adv_s3_row_" + index;
+            }
+        }
 
         function resolve() {
             const container = document.querySelector("#e_adv_s3");
             if (!container) return null;
 
-            const rows = container.querySelectorAll(":scope > p");
-            if (!rows || rows.length === 0) return null;
+            const rows = Array.from(container.querySelectorAll(":scope > p"));
 
-            const lastRow = rows[rows.length - 1];
-
-            // 确保 p 有可用 id（用于 jQuery 选择）
-            if (!lastRow.id) {
-                lastRow.id = "e_adv_s3_row_" + (rows.length - 1);
+            // 从后往前找最后一个 a 数量 < 2 的
+            for (let i = rows.length - 1; i >= 0; i--) {
+                const aCount = rows[i].querySelectorAll(":scope > a").length;
+                if (aCount < 2) {
+                    ensureId(rows[i], i);
+                    return {
+                        element: rows[i],
+                        selector: "#" + rows[i].id,
+                    };
+                }
             }
 
+            // 没有可用列，创建新列
+            const newRow = document.createElement("p");
+            container.appendChild(newRow);
+            ensureId(newRow, rows.length);
+
             return {
-                element: lastRow,
-                selector: "#" + lastRow.id,
+                element: newRow,
+                selector: "#" + newRow.id,
             };
         }
 
-        return function () {
-            // 若缓存失效（被移除或重建）则重新获取
-            if (!cache || !document.contains(cache.element)) {
-                cache = resolve();
-            }
-            return cache;
-        };
+        return resolve;
     })();
 
         const isLogin = document.querySelector(
@@ -2532,6 +2539,111 @@ background-position: center;
         },
     };
 
+    let quickStrike = {
+        runcase: () => {
+            return MExt.ValueStorage.get("quickStrike");
+        },
+        config: [
+            {
+                id: "quickStrike",
+                default: true,
+                name: "快速删除线",
+                type: "check",
+                desc: "在编辑器中加入删除线按钮",
+            },
+        ],
+        core: () => {
+            const wrapStrike = (str, type = 0) => {
+                if (!str) return "";
+                if (type === 0) {
+                    return "[s]" + str + "[/s]";
+                } else {
+                    return "<strike>" + str + "</strike>";
+                }
+            };
+
+            // 快速回复
+            const strikeFast = () => {
+                const target = document.getElementById("fastpostmessage");
+                if (!target) return;
+
+                if (target.selectionStart !== target.selectionEnd) {
+                    const str = target.value.substring(
+                        target.selectionStart,
+                        target.selectionEnd,
+                    );
+                    seditor_insertunit("fastpost", wrapStrike(str, 0), "");
+                }
+            };
+
+            // 浮动回复
+            const strikeFloat = () => {
+                const target = document.getElementById("postmessage");
+                if (!target) return;
+
+                if (target.selectionStart !== target.selectionEnd) {
+                    const str = target.value.substring(
+                        target.selectionStart,
+                        target.selectionEnd,
+                    );
+                    seditor_insertunit("post", wrapStrike(str, 0), "");
+                }
+            };
+
+            // 新版编辑器
+            const strikeEditor = () => {
+                if (getSel() === "") return;
+
+                addSnapshot(getEditorContents());
+                insertText(wrapStrike(getSel(), wysiwyg));
+            };
+
+            // 回复区
+            const hookReplyBtn = () => {
+                if ($("#poststrike").length > 0) return;
+
+                const btn = document.createElement("a");
+                btn.id = "poststrike";
+                btn.href = "javascript:;";
+                btn.title = "删除线";
+                btn.innerText = "删除线";
+                btn.addEventListener("click", strikeFloat);
+
+                $("#postat.fat").after(btn);
+            };
+
+            observe("#append_parent", hookReplyBtn);
+
+            // 页面初始化
+            $(() => {
+                // 快速回复
+                const fastBtn = document.createElement("a");
+                fastBtn.id = "fastpoststrike";
+                fastBtn.href = "javascript:;";
+                fastBtn.title = "删除线";
+                fastBtn.className = "in_editorbtn";
+                fastBtn.innerText = "删除线";
+                fastBtn.addEventListener("click", strikeFast);
+                $("#fastpostat").after(fastBtn);
+
+                // 新编辑器
+                const editorBtn = document.createElement("a");
+                editorBtn.id = "e_strike_s1";
+                editorBtn.href = "javascript:;";
+                editorBtn.title = "删除线";
+                editorBtn.innerText = "删除线";
+                editorBtn.addEventListener("click", strikeEditor);
+
+                const row = MExt.Units.getEditorRows();
+                if (row?.element) {
+                    console.log(row.element);
+                    console.log(editorBtn);
+                    row.element.append(editorBtn);
+                }
+            });
+        },
+    };
+
     const todayStr = () => {
         const d = new Date();
         return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -2794,10 +2906,11 @@ background-position: center;
         hoverableMesdal,
         restrictMedalLine,
         quickAt,
+        quickRainbow,
+        quickStrike,
         myReportReason,
         myCSS,
         myLinks,
-        quickRainbow,
         miscFix,
     );
 })();
