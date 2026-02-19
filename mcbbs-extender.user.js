@@ -231,7 +231,7 @@
         let cache = null;
 
         function resolve() {
-            const container = document.getElementById("e_adv_s3");
+            const container = document.querySelector("#e_adv_s3");
             if (!container) return null;
 
             const rows = container.querySelectorAll(":scope > p");
@@ -2269,7 +2269,6 @@ background-size: 16px;
 background-position: center;
 }`,
         core: () => {
-            const row = MExt.Units.getEditorRows();
             let rainbowFast = () => {
                 let target = document.getElementById("fastpostmessage");
                 if (target.selectionStart != target.selectionEnd) {
@@ -2328,6 +2327,7 @@ background-position: center;
                 btn2.addEventListener("click", rainbow);
                 btn2.innerText = "彩虹文字";
                 // $("#e_adv_s1").append(btn2);
+                const row = MExt.Units.getEditorRows();
                 if (row?.element) {
                     row.element.append(btn2);
                 }
@@ -2454,7 +2454,6 @@ background-position: center;
             background-position: -6px 2px;
         }`,
         core: () => {
-            const row = MExt.Units.getEditorRows();
             let getAtCode = () => {
                 // 分隔list
                 let quickAtList = Stg.get("quickAtList").split(",");
@@ -2523,8 +2522,9 @@ background-position: center;
                     '<a id="fastpostatList" href="javascript:;" title="快速@" class="" onclick="seditor_insertunit(\'fastpost\',MExt_Func_getAtCode(), \'\');">快速@</a> ',
                 );
                 // $("#e_adv_s1").append(
-                if (row?.selector) {
-                    $(row.selector).after(
+                    const row = MExt.Units.getEditorRows();
+                    if (row?.selector) {
+                        $(row.selector).after(
                         '<a id="fastpostatList" href="javascript:;" title="快速@" class="in_editorbtn" onclick="insertText(MExt_Func_getAtCode());">快速@</a>',
                     );
                 }
