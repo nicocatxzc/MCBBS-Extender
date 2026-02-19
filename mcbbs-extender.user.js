@@ -2530,7 +2530,7 @@ background-position: center;
                 // $("#e_adv_s1").append(
                 const row = MExt.Units.getEditorRows();
                 if (row?.selector) {
-                    $(row.selector).after(
+                    $(row.selector).append(
                         '<a id="fastpostatList" href="javascript:;" title="快速@" class="in_editorbtn" onclick="insertText(MExt_Func_getAtCode());">快速@</a>',
                     );
                 }
@@ -2553,7 +2553,7 @@ background-position: center;
         ],
 
         style: /*css */ `
-        #e_strike_s1,#poststrike {
+        #e_strike_s1,#poststrike,#fastpoststrike {
             background-position: -20px -60px;
         }
         `,
