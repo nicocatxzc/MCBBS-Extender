@@ -1322,8 +1322,6 @@ div.tip.tip_4[id*=md_] p {
             },
         ],
         core: () => {
-            let patched = false;
-
             if (typeof unsafeWindow.jumpToExternalLink === "function") {
                 const __jump = unsafeWindow.jumpToExternalLink;
 
@@ -1340,15 +1338,13 @@ div.tip.tip_4[id*=md_] p {
                                 "_blank",
                                 "noopener,noreferrer",
                             );
-                            dlg("成功覆写外链警告！");
+                            dlg("已尝试覆写外链提示方法。");
                             return;
                         }
                     } catch {}
 
                     return __jump.apply(this, arguments);
                 };
-
-                patched = true;
             }
 
             const isExternal = (href) => {
@@ -1386,14 +1382,12 @@ div.tip.tip_4[id*=md_] p {
                     });
             };
 
-            if (!patched) {
-                hookLinks();
-                $(document).on(
-                    "DiscuzAjaxGetFinished DiscuzAjaxPostFinished",
-                    hookLinks,
-                );
-                dlg("成功启用链接方法覆写！");
-            }
+            hookLinks();
+            $(document).on(
+                "DiscuzAjaxGetFinished DiscuzAjaxPostFinished",
+                hookLinks,
+            );
+            dlg("已尝试覆写页面链接跳转方法。");
             dlg("已激活移除外链警告。");
         },
     };
