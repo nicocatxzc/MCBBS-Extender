@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MCBBS Extender
 // @namespace    https://nicocat.cc
-// @version      release-2.2.0
+// @version      release-2.2.1
 // @description  MCBBS行为拓展/样式修复
 // @author       nicocat
 // @originAuthor Zapicc
@@ -57,7 +57,7 @@
         console.debug = function () {};
     }
     // 基本信息初始化
-    let version = "v2.2.0";
+    let version = "v2.2.1";
     let vercode = 121140;
     let valueList = {};
     let configList = [];
@@ -790,6 +790,7 @@ pre:not([id]) code br{
             },
         ],
         core: () => {
+            let getRequest = MExt.Units.getRequest;
             let checkNotifica = (noNotifica = false) => {
                 if (localStorage.getItem("MExt_ActiveQueryId") != queryId) {
                     return false;
@@ -2316,7 +2317,9 @@ background-position: center;
                 btn2.addEventListener("click", rainbow);
                 btn2.innerText = "彩虹文字";
                 // $("#e_adv_s1").append(btn2);
-                row.element.append(btn2);
+                if (row?.element) {
+                    row.element.append(btn2);
+                }
             });
             let nextColor = (clr, step) => {
                 if (clr.r == 255 && clr.b != 255) {
@@ -2509,9 +2512,11 @@ background-position: center;
                     '<a id="fastpostatList" href="javascript:;" title="快速@" class="" onclick="seditor_insertunit(\'fastpost\',MExt_Func_getAtCode(), \'\');">快速@</a> ',
                 );
                 // $("#e_adv_s1").append(
-                $(row.selector).after(
-                    '<a id="fastpostatList" href="javascript:;" title="快速@" class="in_editorbtn" onclick="insertText(MExt_Func_getAtCode());">快速@</a>',
-                );
+                if (row?.selector) {
+                    $(row.selector).after(
+                        '<a id="fastpostatList" href="javascript:;" title="快速@" class="in_editorbtn" onclick="insertText(MExt_Func_getAtCode());">快速@</a>',
+                    );
+                }
             });
         },
     };
