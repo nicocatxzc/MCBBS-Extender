@@ -1,14 +1,22 @@
 // ==UserScript==
 // @name         MCBBS Extender
-// @namespace    https://i.zapic.cc
-// @version      release-2.1.0
+// @namespace    https://nicocat.cc
+// @version      release-2.2.0
 // @description  MCBBS行为拓展/样式修复
-// @author       Zapic
-// @match        https://*.mcbbs.net/*
+// @author       nicocat
+// @originAuthor Zapicc
+// @icon         https://www.mcbbs.co/favicon.ico
+// @match        https://*.mcbbs.co/*
+// @match        https://*.mcbbs.fun/*
+// @match        https://*.mcbbs.sbs/*
+// @match        https://*.mcbbs.win/*
+// @match        https://*.mcbbs.jp/*
+// @grant        GM_getValue
+// @grant        GM_setValue
+// @grant        GM.deleteValue
 // @run-at       document-body
 // @license      MIT
 // @downloadURL https://update.greasyfork.org/scripts/394247/MCBBS%20Extender.user.js
-// @updateURL https://update.greasyfork.org/scripts/394247/MCBBS%20Extender.meta.js
 // ==/UserScript==
 
 // Core
@@ -22,24 +30,34 @@
         ShouldRun = false;
     }
     //在手机页面主动禁用
-    if (document.getElementsByTagName("meta").viewport) {
-        console.log(
-            "MCBBS Extender not fully compatible with Moblie page,exit manually",
-        );
-        ShouldRun = false;
-    }
+    // if (document.getElementsByTagName("meta").viewport) {
+    //     console.log(
+    //         "MCBBS Extender not fully compatible with Moblie page,exit manually",
+    //     );
+    //     ShouldRun = false;
+    // }
     //夹带私货
+    const getTextStyle = (color) => {
+        return `color:${color};font-size:12px;font-family:"Comic Sans MS", "Comic Neue", "Tahoma";font-weight:900`;
+    };
     console.log(
-        " %c Zapic's Homepage %c https://i.zapic.moe ",
-        "color: #ffffff; background: #E91E63; padding:5px;",
-        "background: #000; padding:5px; color:#ffffff",
+        `%cPlugin \n%cMCBBS Extender \n%cBy nicocat \n%chttps://github.com/nicocatxzc/`,
+        getTextStyle("#f1e05a"),
+        getTextStyle("#65c9fe"),
+        getTextStyle("#fabe03"),
+        getTextStyle("inherit"),
+    );
+    console.log(
+        " %c 原作 %c Zapic https://i.zapic.moe ",
+        "color: #ffffff; background: #ffbf00; padding:5px;",
+        "background: #E91E63; padding:5px; color:#ffffff",
     );
     // Gear浏览器上的Polyfill
     if (typeof console.debug == "undefined") {
         console.debug = function () {};
     }
     // 基本信息初始化
-    let version = "v2.1.0";
+    let version = "v2.2.0";
     let vercode = 121140;
     let valueList = {};
     let configList = [];
@@ -101,6 +119,57 @@
         }
         return false;
     };
+    // $("").on("DOMNodeInserted", ); polyfill实现
+    let observe = function (selector, callback, options = {}) {
+        const { subtree = true, once = false } = options;
+
+        let target = document.querySelector(selector);
+        let innerObserver = null;
+
+        const bindObserver = () => {
+            if (!target) return;
+
+            // 防止重复绑定
+            if (innerObserver) return;
+
+            innerObserver = new MutationObserver((mutations) => {
+                callback(target, mutations);
+
+                if (once) {
+                    innerObserver.disconnect();
+                }
+            });
+
+            innerObserver.observe(target, {
+                childList: true,
+                subtree,
+            });
+        };
+
+        // 初始查找
+        bindObserver();
+
+        // 如果目标未来才出现
+        const rootObserver = new MutationObserver(() => {
+            if (!target) {
+                target = document.querySelector(selector);
+                bindObserver();
+            }
+        });
+
+        rootObserver.observe(document.body, {
+            childList: true,
+            subtree: true,
+        });
+
+        return {
+            disconnect() {
+                innerObserver?.disconnect();
+                rootObserver.disconnect();
+            },
+        };
+    };
+
     // 模块加载器
     let moduleLoader = (module) => {
         // 载入配置项
@@ -155,7 +224,40 @@
         };
         __ajaxget(url, showid, waitid, loading, display, relfunc);
     };
-    dlg("Hooked into Discuz Ajax");
+    dlg("已注入Discuz ajax");
+
+    // 编辑器小按钮行列
+    const getEditorRows = (() => {
+        let cache = null;
+
+        function resolve() {
+            const container = document.getElementById("e_adv_s3");
+            if (!container) return null;
+
+            const rows = container.querySelectorAll(":scope > p");
+            if (!rows || rows.length === 0) return null;
+
+            const lastRow = rows[rows.length - 1];
+
+            // 确保 p 有可用 id（用于 jQuery 选择）
+            if (!lastRow.id) {
+                lastRow.id = "e_adv_s3_row_" + (rows.length - 1);
+            }
+
+            return {
+                element: lastRow,
+                selector: "#" + lastRow.id,
+            };
+        }
+
+        return function () {
+            // 若缓存失效（被移除或重建）则重新获取
+            if (!cache || !document.contains(cache.element)) {
+                cache = resolve();
+            }
+            return cache;
+        };
+    })();
 
     // 对外暴露API
     let MExt = {
@@ -166,6 +268,7 @@
         },
         exportModule: exportModule,
         debugLog: dlg,
+        observe,
         versionName: version,
         versionCode: vercode,
         jQuery: $,
@@ -173,10 +276,11 @@
         Units: {
             appendStyle: appendStyle,
             getRequest: getRequest,
+            getEditorRows,
         },
     };
     unsafeWindow.MExt = MExt;
-    dlg("Core loaded.");
+    dlg("核心已加载");
 })();
 
 // Settings
@@ -184,7 +288,7 @@
     let MExt = unsafeWindow.MExt;
     let $ = MExt.jQuery;
     let Md = {
-        style: `.conf_contain {
+        style: /* css */ `.conf_contain {
             max-height: 45vh;
             overflow-y: auto;
             padding-right: 5px;
@@ -253,7 +357,7 @@
                     location.pathname == "/forum.php" &&
                     getRequest("mod") == "post" &&
                     getRequest("action") == "newthread" &&
-                    getRequest("fid") == "246"
+                    getRequest("fid") == "100"
                 ) {
                     $("body").append(
                         $(
@@ -274,7 +378,7 @@
                     MExt.debugLog("Warning send");
                 }
                 // 设置界面初始化
-                $("#user_info_menu .user_info_menu_btn").append(
+                $("#userpanel .user_info_menu_btn").append(
                     "<li><a href='javascript: void(0);' id=\"MExt_config\">MCBBS Extender 设置</a></li>",
                 );
                 let confwinContent =
@@ -345,12 +449,12 @@
                     inputType.text +
                     inputType.textarea +
                     "</div>";
-                MExt.debugLog("Setting window content loaded.");
+                MExt.debugLog("已载入设置窗口。");
                 $("#MExt_config").on("click", () => {
                     unsafeWindow.showDialog(
                         confwinContent,
                         "confirm",
-                        'MCBBS Extender 设置<a href="https://afdian.net/@Zapic" target="_blank" style="margin-left: 385px;color: #369;text-decoration: underline;">爱发电赞助</a><a href="https://github.com/Proj-MExt/Modules-Repo/" target="_blank" style="margin-left: 15px;color: #369;text-decoration: underline;">插件市场</a>',
+                        'MCBBS Extender 设置 <a href="https://github.com/nicocatxzc/MCBBS-Extender/" target="_blank" style="margin-left: 15px;color: #369;text-decoration: underline;">插件主页</a><a href="https://github.com/nicocatxzc/MCBBS-Extender/issues/new" target="_blank" style="margin-left: 15px;color: #369;text-decoration: underline;">反馈问题</a>',
                         () => {
                             MExt.configList.forEach((v) => {
                                 let val = "";
@@ -383,7 +487,9 @@
                         },
                         true,
                         () => {},
-                        "MCBBS Extender " + MExt.versionName + " - 世予可爱捏",
+                        "MCBBS Extender " +
+                            MExt.versionName +
+                            '- Modified By <a href="https://github.com/nicocatxzc" target="_blank" style="color:#fabe03!important;">nicocat</a>',
                     );
                     MExt.configList.forEach((v) => {
                         if (
@@ -409,8 +515,8 @@
 // Update Manager
 (() => {
     let updatelist = [
-        "1. 修复 帖子高亮 部分用户高亮出现异常的情况",
-        '2. 孩子没有钱了, 赏口饭吃吧! -> <a href="https://afdian.net/@Zapic" target="_blank" style="color: #369;text-decoration: underline;">爱发电赞助</a>',
+        `插件原作者团队：<a href="https://github.com/Proj-MExt" target="_blank">Proj-MExt</a>`,
+        "这是移植的第一版插件，未知或无效的功能已被禁用，可能仍然存在许多问题，欢迎随时反馈！",
     ];
     unsafeWindow.MExt.exportModule({
         core: () => {
@@ -423,7 +529,7 @@
                     unsafeWindow.MExt.versionCode,
                 );
                 showDialog(
-                    '<b>欢迎使用MCBBS Extender</b>.<br>本脚本的设置按钮已经放进入了您的个人信息菜单里,如需调整设置请在个人信息菜单里查看.<br><a href="https://afdian.net/@Zapic" target="_blank" style="color: #E91E63;text-decoration: underline;">在爱发电赞助我!</a>',
+                    "<b>欢迎使用MCBBS Extender</b>.<br>本脚本的设置按钮已经放进入了您的个人信息菜单里,如需调整设置请在个人信息菜单里查看.<br><b>这是移植的第一版插件，未知或无效的功能已被禁用，可能仍然存在许多问题，欢迎随时反馈！</b><br>",
                     "right",
                     "欢迎",
                     () => {
@@ -480,8 +586,13 @@
     let $ = MExt.jQuery;
     let dlg = MExt.debugLog;
     let Stg = MExt.ValueStorage;
+    let observe = MExt.observe;
+    let appendEditor = () => {
+        let editorContainer = document.createElement("p");
+        editorContainer.className = "MExt";
+    };
     let fixCodeBlock = {
-        style: `pre:not([id]) code {
+        style: /* css */ `pre:not([id]) code {
     background: #f7f7f7;
     display: block;
     font-family: Monaco, Consolas, 'Lucida Console', 'Courier New', serif;
@@ -509,18 +620,18 @@
 }
 
 .pl pre em::after, .pl .blockcode em::after {
-    content: 'Copy';
+    content: '复制';
     position: absolute;
     top: 3px;
     right: 7px;
     display: block;
     font-size: 14px;
-    border: #369 dashed 1px;
+    border: #fff dashed 1px;
     padding: 0 7px;
     border-radius: 3px;
     transition-duration: .1s;
     opacity: 0.3;
-    color: #369;
+    color: #fff;
     cursor: pointer;
     font-family: Monaco, Consolas, 'Lucida Console', 'Courier New', serif;
 }
@@ -531,9 +642,9 @@
 }
 
 .pl pre em:active::after, .pl .blockcode em:active::after {
-    background: #369;
-    border: #369 solid 2px;
-    color: white;
+    background: #fff;
+    border: #fff solid 2px;
+    color: black;
 }
 
 .pl .blockcode em:hover::after, .pl pre em:hover::after {
@@ -544,7 +655,8 @@
     max-height: 500px;
     overflow: auto;
     padding: 10px 30px 5px 50px;
-    background: #F7F7F7 url(https://www.mcbbs.net/template/mcbbs/image/codebg.gif) repeat-y 0 0;
+    // background: #F7F7F7 url(https://www.mcbbs.net/template/mcbbs/image/codebg.gif) repeat-y 0 0;
+    background: #333;
     scrollbar-width: thin;
 }
 
@@ -567,7 +679,8 @@
     margin: -4px 0px -50px -50px;
     border-right: #d6d6d6 solid 1px;
     width: 38px;
-    background: #ededed;
+    // background: #ededed;
+    background: #333;
     font-size: 12px;
     font-family: Monaco, Consolas, 'Lucida Console', 'Courier New', serif;
     padding-right: 4px;
@@ -628,7 +741,7 @@ pre:not([id]) code br{
                         counter.innerText = lnC;
                         v.firstElementChild.prepend(counter);
                     });
-                dlg("Line counter appended.");
+                dlg("已载入代码行计数器。");
             };
             copycode = (t) => {
                 console.log(t.firstElementChild);
@@ -638,7 +751,7 @@ pre:not([id]) code br{
                         .replace(t.firstElementChild.innerText, ""),
                     "代码已复制到剪贴板",
                 );
-                dlg("Code copied.");
+                dlg("已尝试复制并写入剪切板");
             };
             $(fixCode);
             $(this).on("DiscuzAjaxGetFinished DiscuzAjaxPostFinished", fixCode);
@@ -681,7 +794,7 @@ pre:not([id]) code br{
                 if (localStorage.getItem("MExt_ActiveQueryId") != queryId) {
                     return false;
                 }
-                dlg("Checking message...");
+                dlg("正在检查消息...");
                 $.get("/forum.php?mod=misc", (d) => {
                     // 设置最后通知时间为当前时间,以防止反复推送
                     localStorage.setItem("notifica-time", new Date().getTime());
@@ -712,7 +825,7 @@ pre:not([id]) code br{
                         localStorage.setItem("notifica-time", 1);
                         // 执行通知脚本
                         eval(scp);
-                        dlg("Notifica sent.");
+                        dlg("已发送通知");
                         // 写入消息缓存
                         localStorage.setItem(
                             "MExt_LastNoticeContent",
@@ -747,7 +860,7 @@ pre:not([id]) code br{
             } else {
                 checkNotifica();
             }
-            dlg("Query id is " + queryId + ".");
+            dlg("检查的id为 " + queryId + "。");
             // 运行定时器,用于检查其他页面是否在运行
             setInterval(() => {
                 if (localStorage.getItem("MExt_LastQuery") == "") {
@@ -761,7 +874,7 @@ pre:not([id]) code br{
                 ) {
                     localStorage.setItem("MExt_ActiveQueryId", queryId);
                     checkNotifica();
-                    dlg("Kick off inactive querier,start query.");
+                    dlg("替代正在检查的轮询检查。");
                 }
                 if (localStorage.getItem("MExt_ActiveQueryId") == queryId) {
                     localStorage.setItem("MExt_LastQuery", nowtime);
@@ -771,11 +884,11 @@ pre:not([id]) code br{
             // 判断是否有HTML5Notification
             if (!unsafeWindow.Html5notification) {
                 $.getScript("data/cache/html5notification.js?xm6");
-                dlg("Html5notification added.");
+                dlg("添加H5消息。");
             }
             //
             $(window).on("focus", () => {
-                dlg("Get content from cache");
+                dlg("从缓存获取内容。");
                 $("#myprompt_menu").html(
                     localStorage.getItem("MExt_LastNoticeContent"),
                 );
@@ -789,7 +902,7 @@ pre:not([id]) code br{
                 checkNotifica,
                 MExt.ValueStorage.get("queryMessageInterval") * 1000,
             );
-            dlg("Message query actived.");
+            dlg("已激活消息轮询");
         },
     };
     let rememberPage = {
@@ -859,13 +972,13 @@ pre:not([id]) code br{
                         }, 250);
                     });
                 }
-                dlg("Page remember actived.");
+                dlg("已激活板块内翻页记忆。");
             });
         },
     };
     let animationGoToTop = {
         runcase: () => {
-            return MExt.ValueStorage.get("animationGoToTop");
+            return MExt.ValueStorage.get("animateGoToTopButton");
         },
         config: [
             {
@@ -876,25 +989,60 @@ pre:not([id]) code br{
                 desc: "为右侧回到顶部按钮增加动画以及位置修正.",
             },
         ],
-        style: `#scrolltop {
-    bottom: 270px!important;
-    visibility: visible;
-    overflow-x: hidden;
-    width: 75px;
-}
-
+        style: /* css */ `
+// #scrolltop {
+//     bottom: 270px!important;
+//     visibility: visible;
+//     overflow-x: hidden;
+//     width: 75px;
+// }
 .scrolltopa {
-    transition-duration: .15s;
-    margin-left: -40px;
-    opacity: 0;
+    transform: translateX(-100%);
+    clip-path: inset(0 0 0 100%);
 }
-
 .scrolltopashow {
-    margin-left: 0px;
-    opacity: 1;
-}`,
+    transform: translateX(0);
+    clip-path: inset(0 0 0 0);
+}
+html {
+    scroll-behavior: smooth;
+}
+`,
         core: () => {
-            unsafeWindow.showTopLink = () => {
+            // unsafeWindow.showTopLink = () => {
+            //     let ft = $("#ft")[0];
+            //     if (ft) {
+            //         let scrolltop = $("#scrolltop")[0];
+            //         if (!scrolltop) {
+            //             return false;
+            //         }
+            //         let scrolltopbtn = $(".scrolltopa");
+            //         let scrollHeight = parseInt(
+            //             document.body.getBoundingClientRect().top,
+            //         );
+            //         // let basew = parseInt(ft.clientWidth);
+            //         // let sw = scrolltop.clientWidth;
+            //         // if (basew < 1000) {
+            //         //     let left = parseInt(fetchOffset(ft)["left"]);
+            //         //     left = left < sw ? left * 2 - sw : left;
+            //         //     scrolltop.style.left = basew + left + 44 + "px";
+            //         // } else {
+            //         //     scrolltop.style.left = "auto";
+            //         //     scrolltop.style.right = 0;
+            //         // }
+            //         if (scrollHeight < -100) {
+            //             scrolltopbtn.addClass("scrolltopashow");
+            //         } else {
+            //             scrolltopbtn.removeClass("scrolltopashow");
+            //         }
+            //     }
+            // };
+            // showTopLink();
+            let __showTopLink = unsafeWindow.showTopLink;
+
+            unsafeWindow.showTopLink = (...args) => {
+                __showTopLink?.apply(this, args);
+
                 let ft = $("#ft")[0];
                 if (ft) {
                     let scrolltop = $("#scrolltop")[0];
@@ -905,16 +1053,6 @@ pre:not([id]) code br{
                     let scrollHeight = parseInt(
                         document.body.getBoundingClientRect().top,
                     );
-                    let basew = parseInt(ft.clientWidth);
-                    let sw = scrolltop.clientWidth;
-                    if (basew < 1000) {
-                        let left = parseInt(fetchOffset(ft)["left"]);
-                        left = left < sw ? left * 2 - sw : left;
-                        scrolltop.style.left = basew + left + 44 + "px";
-                    } else {
-                        scrolltop.style.left = "auto";
-                        scrolltop.style.right = 0;
-                    }
                     if (scrollHeight < -100) {
                         scrolltopbtn.addClass("scrolltopashow");
                     } else {
@@ -923,269 +1061,6 @@ pre:not([id]) code br{
                 }
             };
             showTopLink();
-        },
-    };
-    let pinnerTopBar = {
-        runcase: () => {
-            return MExt.ValueStorage.get("pinnedTopBar");
-        },
-        config: [
-            {
-                id: "pinnedTopBar",
-                default: true,
-                name: "更好的固定顶栏",
-                type: "check",
-                desc: "优化固定顶栏的行为,如与编辑栏的兼容性,以及在极窄窗口下的显示.",
-            },
-        ],
-        style: `#toptb {
-    position: fixed;
-    width: 100%;
-    z-index: 790;
-    top: 0;
-    box-shadow: rgba(0, 0, 0, 0.3) 3px 3px 5px 1px;
-    min-width: 510px;
-}
-
-.new_wp {
-    max-width: 1130px;
-    width: 100%;
-}
-
-.mc_map_wp {
-    padding-top: 45px;
-}
-
-.mw {
-    padding-top: 60px
-}
-
-#user_info_menu, #myprompt_menu, #usertools_menu, #sslct_menu, #scbar_type_menu {
-    position: fixed!important;
-    top: 47px!important
-}
-
-#scbar_type_menu {
-    top: 38px!important;
-}
-
-#e_controls {
-    z-index: 790!important
-}
-
-@media screen and (max-width: 860px) {
-    #toptb .z.light {
-        display: none;
-    }
-    #toptb>.new_wp>.y {
-        float: none;
-        margin-left: 12px;
-    }
-}`,
-        core: () => {
-            $(() => {
-                // 重写editorcontrolpos函数,与固定顶栏兼容
-                editorcontrolpos = () => {
-                    if (editorisfull) {
-                        return;
-                    }
-                    let scrollTop = Math.max(
-                        document.documentElement.scrollTop,
-                        document.body.scrollTop,
-                    );
-                    if (
-                        scrollTop + 47 > editorcontroltop &&
-                        editorcurrentheight > editorminheight
-                    ) {
-                        $("#" + editorid + "_controls")
-                            .prop("style", "z-index:0!important")
-                            .css("position", "fixed")
-                            .css("top", "47px")
-                            .css("width", editorcontrolwidth + "px");
-                        $("#" + editorid + "_controls_mask").css("display", "");
-                    } else {
-                        $("#" + editorid + "_controls")
-                            .css("position", "")
-                            .css("top", "")
-                            .css("width", "");
-                        $("#" + editorid + "_controls_mask").css(
-                            "display",
-                            "none",
-                        );
-                    }
-                };
-                //增加一个5px的遮罩,防止鼠标经过空隙时碰到底层内容
-                $("#toptb").after(
-                    '<div style="position: fixed;top: 47px;height: 5px;width: 100%;z-index:700;"></div>',
-                );
-                dlg("Mask appended.");
-            });
-        },
-    };
-    let fixTopBarPopMenu = {
-        runcase: () => {
-            return MExt.ValueStorage.get("fixTopBarPopMenu");
-        },
-        config: [
-            {
-                id: "fixTopBarPopMenu",
-                default: true,
-                type: "check",
-                name: "弹出菜单美化",
-                desc: "美化弹出菜单的样式,如个人信息菜单.",
-            },
-        ],
-        style: `.p_pop:not(.blk) a {
-border-radius: 5px;
-border-bottom: none;
-}
-
-div#user_info_menu {
-margin-top: 5px;
-}
-
-.user_info_menu_info>li {
-margin-top: 2px;
-}
-
-a.rank {
-padding: 2px 7px!important;
-border-radius: 14px;
-}
-
-a.rank:hover {
-text-decoration: none;
-}
-
-ul.user_info_menu_btn {
-padding-top: 6px;
-}
-
-ul.user_info_menu_btn>li>a:hover {
-background:
-
-}
-
-ul.user_info_menu_btn>li>a {
-padding: 5px 8px;
-border-radius: 5px;
-}
-
-ul.user_info_menu_btn>li>a[onclick]:hover {
-background: red!important;
-}
-
-#myprompt_menu {
-margin-left: -10px;
-}
-
-#myprompt_menu, #usertools_menu, #sslct_menu {
-z-index: 791!important;
-margin-top: 5px!important;
-transform: translateX(-50%);
-margin-left: 20px;
-}
-
-.p_pop:not(.h_pop) {
-border: 1px solid #d1d1d1;
-min-width: unset;
-border-radius: 5px;
-}
-
-#myprompt_menu>li>a, #usertools_menu>li>a, #scbar_type_menu>li>a {
-border: none;
-border-radius: 5px;
-text-align: center;
-padding: 3px 15px;
-}
-
-#myprompt_menu>li>a:hover, #scbar_type_menu>li>a:hover, #usertools_menu>li>a:hover {
-background: #36b030;
-color: white;
-}
-
-div#sslct_menu {
-margin-left: 54px;
-padding-left: 14px;
-}
-
-.sslct_btn {
-border: none!important;
-width: 15px;
-height: 15px;
-padding: 2px;
-}
-
-.sslct_btn i {
-border-radius: 50%;
-width: 13px;
-height: 13px;
-}
-
-#scbar_type_menu {
-background: url(https://www.mcbbs.net/template/mcbbs/image/bg-wool-white.png);
-}
-
-a#scbar_type:after {
-content: "▼";
-margin-left: 10px;
-}
-
-#scbar_type_menu>li>a {
-padding: 3px 5px;
-line-height: 20px;
-height: 20px;
-}
-
-.scbar_type_td {
-background: url(https://www.mcbbs.net/template/mcbbs/image/scbar_txt.png) -95px center no-repeat
-}
-
-.y_search {
-width: 249px;
-border-radius: 3px;
-overflow: hidden;
-}
-.y_search_inp {
-float: unset;
-}
-
-#scbar_txt {
-width: 130px;
-background-color: transparent;
-}
-body.winter{
---MExtBtnClr: #5c8dff!important;
-}
-body.nether{
---MExtBtnClr: #a42e0b!important;
-}
-body{
---MExtBtnClr: #36b030!important;
-}
-.user_info_menu_info li a.rank, .user_info_menu_info li a.rank font, ul.user_info_menu_btn>li>a:hover, .p_pop:not(.blk) a:hover,#myprompt_menu>li>a:hover, #scbar_type_menu>li>a:hover, #usertools_menu>li>a:hover, .p_pop:not(.blk) a:hover {
-background: var(--MExtBtnClr);
-color: white!important;
-}
-
-`,
-        core: () => {
-            let __extstyle = extstyle;
-            let checkStyle = (style = null) => {
-                let theme = style == null ? getcookie("extstyle") : style;
-                if (theme == "./template/mcbbs/style/winter") {
-                    $("body").removeClass("nether").addClass("winter");
-                } else if (theme == "./template/mcbbs/style/default") {
-                    $("body").removeClass("winter nether");
-                } else {
-                    $("body").addClass("nether").removeClass("winter");
-                }
-            };
-            extstyle = (style) => {
-                __extstyle(style);
-                checkStyle(style);
-            };
-            checkStyle();
         },
     };
     let hoverableMesdal = {
@@ -1202,7 +1077,7 @@ color: white!important;
             },
         ],
         style:
-            `.hoverable-medal:hover:after {
+            /* css */ `.hoverable-medal:hover:after {
     margin-top: 0px!important;
     opacity: 1!important;
 }
@@ -1344,84 +1219,80 @@ div.tip.tip_4[id*=md_] p {
             );
         },
     };
-    let viewWarns = {
-        runcase: () => {
-            return MExt.ValueStorage.get("viewWarns");
-        },
-        config: [
-            {
-                id: "viewWarns",
-                default: true,
-                name: "查看警告记录",
-                type: "check",
-                desc: "为每一层楼和每一个个人主页(除自己)添加查看警告记录按钮",
-            },
-        ],
-        style: `.view_warns_inposts {
-    background: url(template/mcbbs/image/warning.gif) no-repeat 0px 2px;
-    background-size: 16px;
-    width: 90px!important;
-}
+    //     let viewWarns = {
+    //         runcase: () => {
+    //             return MExt.ValueStorage.get("viewWarns");
+    //         },
+    //         config: [
+    //             {
+    //                 id: "viewWarns",
+    //                 default: true,
+    //                 name: "查看警告记录",
+    //                 type: "check",
+    //                 desc: "为每一层楼和每一个个人主页(除自己)添加查看警告记录按钮",
+    //             },
+    //         ],
+    //         style: /* css */ `.view_warns_inposts {
+    //     background: url(template/mcbbs/image/warning.gif) no-repeat 0px 2px;
+    //     background-size: 16px;
+    //     width: 90px!important;
+    // }
 
-.view_warns_home a {
-    background: url(template/mcbbs/image/warning.gif) no-repeat 1px 2px!important;
-    background-size: 16px!important;
-}`,
-        core: () => {
-            let addVWLink = () => {
-                $(".plhin:not([vw-added*=true])").each((i, v) => {
-                    let href = $(v).find(".authi .xw1").attr("href");
-                    if (!href) {
-                        return false;
-                    }
-                    let uid = /uid=(\d*)/.exec(href)[1];
-                    $(v)
-                        .attr("vw-added", "true")
-                        .find("ul.xl.xl2.o.cl")
-                        .append(
-                            $(
-                                '<li class="view_warns_inposts"><a href="forum.php?mod=misc&action=viewwarning&tid=952104&uid=' +
-                                    uid +
-                                    '" title="查看警告记录" class="xi2" onclick="showWindow(\'viewwarning\', this.href)">查看警告记录</a></li>',
-                            ),
-                        );
-                });
-                dlg("In-posts view warns link added");
-            };
-            // 在DiscuzAjax时重新调用添加函数,防止失效
-            $(this).on(
-                "DiscuzAjaxGetFinished DiscuzAjaxPostFinished",
-                addVWLink,
-            );
-            dlg("add VWLink Ajax Event attached.");
-            $(() => {
-                // 添加查看警告按钮
-                addVWLink();
-                // 用户信息界面添加查看警告按钮
-                let href = $("#uhd .cl a").attr("href");
-                if (!href) {
-                    return false;
-                }
-                let uid = /uid=(\d*)/.exec(href)[1];
-                if (!uid) {
-                    return false;
-                }
-                $("#uhd .mn ul").append(
-                    '<li class="view_warns_home"><a href="forum.php?mod=misc&action=viewwarning&tid=952104&uid=' +
-                        uid +
-                        '" title="查看警告记录" class="xi2" onclick="showWindow(\'viewwarning\', this.href)">查看警告记录</a></li>',
-                );
-                dlg("Home page view warns link added.");
-            });
-        },
-    };
+    // .view_warns_home a {
+    //     background: url(template/mcbbs/image/warning.gif) no-repeat 1px 2px!important;
+    //     background-size: 16px!important;
+    // }`,
+    //         core: () => {
+    //             let addVWLink = () => {
+    //                 $(".plhin:not([vw-added*=true])").each((i, v) => {
+    //                     let href = $(v).find(".authi .xw1").attr("href");
+    //                     if (!href) {
+    //                         return false;
+    //                     }
+    //                     let uid = /uid-(\d*)/.exec(href)[1];
+    //                     $(v)
+    //                         .attr("vw-added", "true")
+    //                         .find("ul.xl.xl2.o.cl")
+    //                         .append(
+    //                             $(
+    //                                 '<li class="view_warns_inposts"><a href="forum.php?mod=misc&action=viewwarning&tid=952104&uid=' +
+    //                                     uid +
+    //                                     '" title="查看警告记录" class="xi2" onclick="showWindow(\'viewwarning\', this.href)">查看警告记录</a></li>',
+    //                             ),
+    //                         );
+    //                 });
+    //                 dlg("In-posts view warns link added");
+    //             };
+    //             // 在DiscuzAjax时重新调用添加函数,防止失效
+    //             $(this).on(
+    //                 "DiscuzAjaxGetFinished DiscuzAjaxPostFinished",
+    //                 addVWLink,
+    //             );
+    //             dlg("add VWLink Ajax Event attached.");
+    //             $(() => {
+    //                 // 添加查看警告按钮
+    //                 addVWLink();
+    //                 // 用户信息界面添加查看警告按钮
+    //                 let href = $("#uhd .cl a").attr("href");
+    //                 if (!href) {
+    //                     return false;
+    //                 }
+    //                 let uid = /uid=(\d*)/.exec(href)[1];
+    //                 if (!uid) {
+    //                     return false;
+    //                 }
+    //                 $("#uhd .mn ul").append(
+    //                     '<li class="view_warns_home"><a href="forum.php?mod=misc&action=viewwarning&tid=952104&uid=' +
+    //                         uid +
+    //                         '" title="查看警告记录" class="xi2" onclick="showWindow(\'viewwarning\', this.href)">查看警告记录</a></li>',
+    //                 );
+    //                 dlg("Home page view warns link added.");
+    //             });
+    //         },
+    //     };
     let removeLinkWarn = {
         runcase: () => {
-            return (
-                MExt.ValueStorage.get("removeLinkWarn") &&
-                location.pathname == "/plugin.php" &&
-                MExt.Units.getRequest("id") == "link_redirect"
-            );
+            return MExt.ValueStorage.get("removeLinkWarn");
         },
         config: [
             {
@@ -1433,318 +1304,386 @@ div.tip.tip_4[id*=md_] p {
             },
         ],
         core: () => {
-            let url = MExt.Units.getRequest("target");
-            if (url) {
-                // 跳就完事了
-                location.href = decodeURIComponent(url);
+            let patched = false;
+
+            if (typeof unsafeWindow.jumpToExternalLink === "function") {
+                const __jump = unsafeWindow.jumpToExternalLink;
+
+                unsafeWindow.jumpToExternalLink = function (link) {
+                    try {
+                        const u = new URL(link, location.href);
+
+                        if (
+                            /^https?:$/.test(u.protocol) &&
+                            u.host !== location.host
+                        ) {
+                            window.open(
+                                u.href,
+                                "_blank",
+                                "noopener,noreferrer",
+                            );
+                            dlg("成功覆写外链警告！");
+                            return;
+                        }
+                    } catch {}
+
+                    return __jump.apply(this, arguments);
+                };
+
+                patched = true;
             }
-        },
-    };
-    let useIgInQuickReply = {
-        runcase: () => {
-            return MExt.ValueStorage.get("useIgInQuickReply");
-        },
-        config: [
-            {
-                id: "useIgInQuickReply",
-                default: true,
-                name: "快速回复使用个人签名",
-                type: "check",
-                desc: "在页脚快速回复帖子时使用个人签名.",
-            },
-        ],
-        core: () => {
-            // 快速回复框使用个人签名
-            let hookReplyBtn = () => {
-                if ($("#fwin_reply #usesig").length > 0) {
+
+            const isExternal = (href) => {
+                try {
+                    if (!href.trim().toLowerCase().startsWith("/")) {
+                        const u = new URL(href, location.href);
+                        if (u.protocol !== "https:" && u.protocol !== "http:") {
+                            return false;
+                        }
+                        return u.host !== location.host;
+                    } else {
+                        return false;
+                    }
+                } catch {
                     return false;
                 }
-                $("#fwin_reply #postsubmit").after(
-                    '<label for="usesig" style="margin-left: 10px;float: left;margin-top: 3px;"><input type="checkbox" name="usesig" id="usesig" class="pc" value="1" checked="checked">使用个人签名</label>',
-                );
-                dlg("Use Ig Checkbox appended.");
             };
-            $("#append_parent").on("DOMNodeInserted", hookReplyBtn);
-            $(() => {
-                // 底部快速回复增加选项
-                $("#fastpostsubmit").after(
-                    '<label for="usesig" style="margin-left: 10px;"><input type="checkbox" name="usesig" id="usesig" class="pc" value="1" checked="checked">使用个人签名</label>',
-                );
-            });
-        },
-    };
-    let fixImgZoom = {
-        runcase: () => {
-            return MExt.ValueStorage.get("fixImgZoom");
-        },
-        config: [
-            {
-                id: "fixImgZoom",
-                default: true,
-                name: "优化图片缩放",
-                type: "check",
-                desc: "使用更现代的方法实现图片缩放.",
-            },
-        ],
-        style: `#img_scale {
-    opacity: 0;
-    position: absolute;
-    right: 20px;
-    bottom: 20px;
-    background: #0006;
-    transition-duration: .2s;
-    color: white;
-    padding: 10px;
-    pointer-events: none;
-    border-radius: 10px;
-}
 
-#imgzoom_zoom {
-    height: auto;
-    transition-duration: .2s
-}
+            const hookLinks = () => {
+                $("a[href]")
+                    .not("[mext-link-fixed]")
+                    .each((_, el) => {
+                        const href = el.getAttribute("href");
+                        if (!href || !isExternal(href)) return;
 
-#imgzoom_zoomlayer {
-    height: auto!important
-}
-
-#imgzoom {
-    width: auto!important;
-    height: auto!important
-}`,
-        core: () => {
-            let __zoom = zoom;
-            let t = 0;
-            // 初始化基本缩放信息对象
-            let img = {
-                width: 0,
-                height: 0,
-                top: 0,
-                left: 0,
-                radio: 1,
-                scale: 1,
-                orgwidth: 0,
-            };
-            // 缩放函数
-            let resize = (width) => {
-                dlg("Image resizing...");
-                clearTimeout(t);
-                // 显示缩放比例
-                $("#img_scale")
-                    .html(parseInt(img.scale * 100) + "%")
-                    .css("opacity", 1);
-                t = setTimeout(() => {
-                    $("#img_scale").css("opacity", 0);
-                }, 2000);
-                // 计算目标大小和位置
-                let ow = img.width;
-                img.width = width;
-                ow = (ow - img.width) / -2;
-                img.left -= ow;
-                img.top -= ow * img.radio;
-                // 修改
-                $("#imgzoom_zoom").css("width", img.width + "px");
-                $("#imgzoom").css("left", img.left + "px");
-                $("#imgzoom").css("top", img.top + "px");
-            };
-            // 保存基本信息
-            let initP = () => {
-                dlg("Init Picture info");
-                img.width = parseInt($("#imgzoom_zoom").attr("width"));
-                img.height = parseInt($("#imgzoom_zoom").attr("height"));
-                img.radio = img.height / img.width;
-                img.top = parseInt($("#imgzoom").css("top"));
-                img.left = parseInt($("#imgzoom").css("left"));
-                img.scale = 1;
-                img.orgwidth = img.width;
-            };
-            zoom = (obj, zimg, nocover, pn, showexif) => {
-                // 伪装成IE,使原函数的DOMMouseScroll事件监听器以可以被卸除的形式添加
-                BROWSER.ie = 6;
-                __zoom(obj, zimg, nocover, pn, showexif);
-                // 防止翻车,改回去
-                setTimeout(() => {
-                    BROWSER.ie = 0;
-                    dlg("IE canceled.");
-                }, 1000);
-                // 等待窗口出现
-                let wait = setInterval(() => {
-                    if ($("#imgzoom_zoom").length) {
-                        dlg("Image found");
-                        clearInterval(wait);
-                        // 信息归零,准备下一次保存
-                        img = {
-                            width: 0,
-                            height: 0,
-                            top: 0,
-                            left: 0,
-                            radio: 1,
-                            scale: 1,
-                            orgwidth: 0,
-                        };
-                        // 显示遮罩
-                        $("#imgzoom_cover").css("display", "unset");
-                        // 判断是否已经监听事件,防止超级加倍
-                        if ($("#imgzoom").attr("fixed") == "true") {
-                            return true;
-                        }
-                        // 原始尺寸按钮事件
-                        $("#imgzoom_adjust").on("click", () => {
-                            dlg("return source size");
-                            $("#imgzoom").css(
-                                "transition-property",
-                                "opacity,top,left,transform",
-                            );
-                            img.width == 0 ? initP() : 0;
-                            img.scale = 1;
-                            resize($("#imgzoom_zoom").attr("width"));
-                        });
-                        // 屏蔽页面滚动
-                        $("#imgzoom_cover").on(
-                            "mousewheel DOMMouseScroll",
-                            (e) => {
-                                if (e.ctrlKey || e.altKey || e.shiftKey) {
-                                    return true;
-                                }
+                        $(el)
+                            .attr("mext-link-fixed", "1")
+                            .on("click", (e) => {
+                                // 阻止弹窗
                                 e.preventDefault();
-                            },
-                        );
-                        // 卸除原函数监听器
-                        $("#imgzoom")[0].onmousewheel = null;
-                        // 增加显示缩放大小元素并监听事件
-                        $("#imgzoom")
-                            .append(`<span id="img_scale"></span>`)
-                            .on("mousewheel DOMMouseScroll", (e) => {
-                                // 判断是否按下功能键
-                                if (e.ctrlKey || e.altKey || e.shiftKey) {
-                                    dlg("Func key pressed.");
-                                    return true;
-                                }
-                                // 阻止滚动
-                                e.preventDefault();
-                                // 兼容火狐,正确判断滚轮方向
-                                let scroll = e.originalEvent.wheelDelta
-                                    ? e.originalEvent.wheelDelta
-                                    : -e.originalEvent.detail;
-                                // 忽略无效滚动
-                                if (scroll == 0) {
-                                    return true;
-                                }
-                                // 判断是否需要初始化
-                                img.width == 0 ? initP() : 0;
-                                // 规定需要显示过渡动画的属性
-                                $("#imgzoom").css(
-                                    "transition-property",
-                                    "opacity,top,left,transform",
-                                );
-                                // 判断是否过小
-                                if (
-                                    scroll < 0 &&
-                                    ((img.width < 350 && img.radio < 1) ||
-                                        (img.width * img.radio < 350 &&
-                                            img.radio >= 1))
-                                ) {
-                                    // 回弹动画
-                                    dlg("Reach min size");
-                                    $("#imgzoom").css(
-                                        "transform",
-                                        "scale(0.8)",
-                                    );
-                                    setTimeout(() => {
-                                        $("#imgzoom").css(
-                                            "transform",
-                                            "scale(1)",
-                                        );
-                                    }, 200);
-                                    return true;
-                                }
-                                // 修改缩放比例
-                                img.scale += scroll > 0 ? 0.1 : -0.1;
-                                // 判断比例是否过小
-                                if (img.scale < 0.1) {
-                                    img.scale = 0.1;
-                                    // 回弹动画
-                                    dlg("Reach min size");
-                                    $("#imgzoom").css(
-                                        "transform",
-                                        "scale(0.8)",
-                                    );
-                                    setTimeout(() => {
-                                        $("#imgzoom").css(
-                                            "transform",
-                                            "scale(1)",
-                                        );
-                                    }, 200);
-                                    return true;
-                                }
-                                // 缩放
-                                resize(img.orgwidth * Math.pow(img.scale, 2));
-                            })
-                            .attr("fixed", "true");
-                        // 按下鼠标事件
-                        $("#imgzoom").on("mousedown", (e) => {
-                            // 按下鼠标时移除修改位置的过渡动画,使窗口跟手
-                            dlg("Animate removed");
-                            $("#imgzoom").css("transition-property", "opacity");
-                        });
-                        // 释放鼠标事件
-                        $("#imgzoom").on("mouseup", (e) => {
-                            // 改回去
-                            $("#imgzoom").css(
-                                "transition-property",
-                                "opacity,top,left,transform",
-                            );
-                            // 保存移动后的窗口位置
-                            img.top = parseInt($("#imgzoom").css("top"));
-                            img.left = parseInt($("#imgzoom").css("left"));
-                            dlg("Animate added,Pos saved");
-                        });
-                    }
-                }, 50);
+                                e.stopImmediatePropagation();
+
+                                window.open(href, "_blank", "noopener");
+                            });
+                    });
             };
-        },
-    };
-    let disableAutoplay = {
-        runcase: () => {
-            return MExt.ValueStorage.get("disableAutoplay");
-        },
-        config: [
-            {
-                id: "disableAutoplay",
-                default: false,
-                name: "禁止BGM自动播放",
-                type: "check",
-                desc: "阻止页内BGM自动播放.",
-            },
-        ],
-        core: () => {
-            let clearAutoPlay = () => {
-                $("iframe[id*=iframe_mp3]:not([id*=no_autoplay])").each(
-                    (i, v) => {
-                        // 重构播放器,去除自动播放属性
-                        let player = document.createElement("iframe");
-                        let hidden = document.createElement("div");
-                        hidden.id = v.id;
-                        hidden.style.display = "none";
-                        player.id = v.id + "_no_autoplay";
-                        player.width = v.width;
-                        player.height = v.height;
-                        player.frameBorder = v.frameBorder;
-                        player.allow = v.allow;
-                        player.src = v.src.replace("&auto=1", "");
-                        v.after(hidden);
-                        v.after(player);
-                        v.remove();
-                        dlg("Canceled all autoplay");
-                    },
+
+            if (!patched) {
+                hookLinks();
+                $(document).on(
+                    "DiscuzAjaxGetFinished DiscuzAjaxPostFinished",
+                    hookLinks,
                 );
-            };
-            $(this).on("DiscuzAjaxGetFinished DiscuzAjaxPostFinished", () => {
-                setTimeout(clearAutoPlay, 100);
-            });
-            $(clearAutoPlay);
+                dlg("成功启用链接方法覆写！");
+            }
+            dlg("已激活移除外链警告。");
         },
     };
+    // let useIgInQuickReply = {
+    //     runcase: () => {
+    //         return MExt.ValueStorage.get("useIgInQuickReply");
+    //     },
+    //     config: [
+    //         {
+    //             id: "useIgInQuickReply",
+    //             default: true,
+    //             name: "快速回复使用个人签名",
+    //             type: "check",
+    //             desc: "在页脚快速回复帖子时使用个人签名.",
+    //         },
+    //     ],
+    //     core: () => {
+    //         // 快速回复框使用个人签名
+    //         let hookReplyBtn = () => {
+    //             if ($("#fwin_reply #usesig").length > 0) {
+    //                 return false;
+    //             }
+    //             $("#fwin_reply #postsubmit").after(
+    //                 '<label for="usesig" style="margin-left: 10px;float: left;margin-top: 3px;"><input type="checkbox" name="usesig" id="usesig" class="pc" value="1" checked="checked">使用个人签名</label>',
+    //             );
+    //             dlg("Use Ig Checkbox appended.");
+    //         };
+    //         observe("#append_parent",hookReplyBtn)
+    //         $(() => {
+    //             // 底部快速回复增加选项
+    //             $("#fastpostsubmit").after(
+    //                 '<label for="usesig" style="margin-left: 10px;"><input type="checkbox" name="usesig" id="usesig" class="pc" value="1" checked="checked">使用个人签名</label>',
+    //             );
+    //         });
+    //     },
+    // };
+    //     let fixImgZoom = {
+    //         runcase: () => {
+    //             return MExt.ValueStorage.get("fixImgZoom");
+    //         },
+    //         config: [
+    //             {
+    //                 id: "fixImgZoom",
+    //                 default: true,
+    //                 name: "优化图片缩放",
+    //                 type: "check",
+    //                 desc: "使用更现代的方法实现图片缩放.",
+    //             },
+    //         ],
+    //         style: /* css */ `#img_scale {
+    //     opacity: 0;
+    //     position: absolute;
+    //     right: 20px;
+    //     bottom: 20px;
+    //     background: #0006;
+    //     transition-duration: .2s;
+    //     color: white;
+    //     padding: 10px;
+    //     pointer-events: none;
+    //     border-radius: 10px;
+    // }
+
+    // #imgzoom_zoom {
+    //     height: auto;
+    //     transition-duration: .2s
+    // }
+
+    // #imgzoom_zoomlayer {
+    //     height: auto!important
+    // }
+
+    // #imgzoom {
+    //     width: auto!important;
+    //     height: auto!important
+    // }`,
+    //         core: () => {
+    //             let __zoom = zoom;
+    //             let t = 0;
+    //             // 初始化基本缩放信息对象
+    //             let img = {
+    //                 width: 0,
+    //                 height: 0,
+    //                 top: 0,
+    //                 left: 0,
+    //                 radio: 1,
+    //                 scale: 1,
+    //                 orgwidth: 0,
+    //             };
+    //             // 缩放函数
+    //             let resize = (width) => {
+    //                 dlg("Image resizing...");
+    //                 clearTimeout(t);
+    //                 // 显示缩放比例
+    //                 $("#img_scale")
+    //                     .html(parseInt(img.scale * 100) + "%")
+    //                     .css("opacity", 1);
+    //                 t = setTimeout(() => {
+    //                     $("#img_scale").css("opacity", 0);
+    //                 }, 2000);
+    //                 // 计算目标大小和位置
+    //                 let ow = img.width;
+    //                 img.width = width;
+    //                 ow = (ow - img.width) / -2;
+    //                 img.left -= ow;
+    //                 img.top -= ow * img.radio;
+    //                 // 修改
+    //                 $("#imgzoom_zoom").css("width", img.width + "px");
+    //                 $("#imgzoom").css("left", img.left + "px");
+    //                 $("#imgzoom").css("top", img.top + "px");
+    //             };
+    //             // 保存基本信息
+    //             let initP = () => {
+    //                 dlg("Init Picture info");
+    //                 img.width = parseInt($("#imgzoom_zoom").attr("width"));
+    //                 img.height = parseInt($("#imgzoom_zoom").attr("height"));
+    //                 img.radio = img.height / img.width;
+    //                 img.top = parseInt($("#imgzoom").css("top"));
+    //                 img.left = parseInt($("#imgzoom").css("left"));
+    //                 img.scale = 1;
+    //                 img.orgwidth = img.width;
+    //             };
+    //             zoom = (obj, zimg, nocover, pn, showexif) => {
+    //                 // 伪装成IE,使原函数的DOMMouseScroll事件监听器以可以被卸除的形式添加
+    //                 BROWSER.ie = 6;
+    //                 __zoom(obj, zimg, nocover, pn, showexif);
+    //                 // 防止翻车,改回去
+    //                 setTimeout(() => {
+    //                     BROWSER.ie = 0;
+    //                     dlg("IE canceled.");
+    //                 }, 1000);
+    //                 // 等待窗口出现
+    //                 let wait = setInterval(() => {
+    //                     if ($("#imgzoom_zoom").length) {
+    //                         dlg("Image found");
+    //                         clearInterval(wait);
+    //                         // 信息归零,准备下一次保存
+    //                         img = {
+    //                             width: 0,
+    //                             height: 0,
+    //                             top: 0,
+    //                             left: 0,
+    //                             radio: 1,
+    //                             scale: 1,
+    //                             orgwidth: 0,
+    //                         };
+    //                         // 显示遮罩
+    //                         $("#imgzoom_cover").css("display", "unset");
+    //                         // 判断是否已经监听事件,防止超级加倍
+    //                         if ($("#imgzoom").attr("fixed") == "true") {
+    //                             return true;
+    //                         }
+    //                         // 原始尺寸按钮事件
+    //                         $("#imgzoom_adjust").on("click", () => {
+    //                             dlg("return source size");
+    //                             $("#imgzoom").css(
+    //                                 "transition-property",
+    //                                 "opacity,top,left,transform",
+    //                             );
+    //                             img.width == 0 ? initP() : 0;
+    //                             img.scale = 1;
+    //                             resize($("#imgzoom_zoom").attr("width"));
+    //                         });
+    //                         // 屏蔽页面滚动
+    //                         $("#imgzoom_cover").on(
+    //                             "mousewheel DOMMouseScroll",
+    //                             (e) => {
+    //                                 if (e.ctrlKey || e.altKey || e.shiftKey) {
+    //                                     return true;
+    //                                 }
+    //                                 e.preventDefault();
+    //                             },
+    //                         );
+    //                         // 卸除原函数监听器
+    //                         $("#imgzoom")[0].onmousewheel = null;
+    //                         // 增加显示缩放大小元素并监听事件
+    //                         $("#imgzoom")
+    //                             .append(`<span id="img_scale"></span>`)
+    //                             .on("mousewheel DOMMouseScroll", (e) => {
+    //                                 // 判断是否按下功能键
+    //                                 if (e.ctrlKey || e.altKey || e.shiftKey) {
+    //                                     dlg("Func key pressed.");
+    //                                     return true;
+    //                                 }
+    //                                 // 阻止滚动
+    //                                 e.preventDefault();
+    //                                 // 兼容火狐,正确判断滚轮方向
+    //                                 let scroll = e.originalEvent.wheelDelta
+    //                                     ? e.originalEvent.wheelDelta
+    //                                     : -e.originalEvent.detail;
+    //                                 // 忽略无效滚动
+    //                                 if (scroll == 0) {
+    //                                     return true;
+    //                                 }
+    //                                 // 判断是否需要初始化
+    //                                 img.width == 0 ? initP() : 0;
+    //                                 // 规定需要显示过渡动画的属性
+    //                                 $("#imgzoom").css(
+    //                                     "transition-property",
+    //                                     "opacity,top,left,transform",
+    //                                 );
+    //                                 // 判断是否过小
+    //                                 if (
+    //                                     scroll < 0 &&
+    //                                     ((img.width < 350 && img.radio < 1) ||
+    //                                         (img.width * img.radio < 350 &&
+    //                                             img.radio >= 1))
+    //                                 ) {
+    //                                     // 回弹动画
+    //                                     dlg("Reach min size");
+    //                                     $("#imgzoom").css(
+    //                                         "transform",
+    //                                         "scale(0.8)",
+    //                                     );
+    //                                     setTimeout(() => {
+    //                                         $("#imgzoom").css(
+    //                                             "transform",
+    //                                             "scale(1)",
+    //                                         );
+    //                                     }, 200);
+    //                                     return true;
+    //                                 }
+    //                                 // 修改缩放比例
+    //                                 img.scale += scroll > 0 ? 0.1 : -0.1;
+    //                                 // 判断比例是否过小
+    //                                 if (img.scale < 0.1) {
+    //                                     img.scale = 0.1;
+    //                                     // 回弹动画
+    //                                     dlg("Reach min size");
+    //                                     $("#imgzoom").css(
+    //                                         "transform",
+    //                                         "scale(0.8)",
+    //                                     );
+    //                                     setTimeout(() => {
+    //                                         $("#imgzoom").css(
+    //                                             "transform",
+    //                                             "scale(1)",
+    //                                         );
+    //                                     }, 200);
+    //                                     return true;
+    //                                 }
+    //                                 // 缩放
+    //                                 resize(img.orgwidth * Math.pow(img.scale, 2));
+    //                             })
+    //                             .attr("fixed", "true");
+    //                         // 按下鼠标事件
+    //                         $("#imgzoom").on("mousedown", (e) => {
+    //                             // 按下鼠标时移除修改位置的过渡动画,使窗口跟手
+    //                             dlg("Animate removed");
+    //                             $("#imgzoom").css("transition-property", "opacity");
+    //                         });
+    //                         // 释放鼠标事件
+    //                         $("#imgzoom").on("mouseup", (e) => {
+    //                             // 改回去
+    //                             $("#imgzoom").css(
+    //                                 "transition-property",
+    //                                 "opacity,top,left,transform",
+    //                             );
+    //                             // 保存移动后的窗口位置
+    //                             img.top = parseInt($("#imgzoom").css("top"));
+    //                             img.left = parseInt($("#imgzoom").css("left"));
+    //                             dlg("Animate added,Pos saved");
+    //                         });
+    //                     }
+    //                 }, 50);
+    //             };
+    //         },
+    //     };
+    // let disableAutoplay = {
+    //     runcase: () => {
+    //         return MExt.ValueStorage.get("disableAutoplay");
+    //     },
+    //     config: [
+    //         {
+    //             id: "disableAutoplay",
+    //             default: false,
+    //             name: "禁止BGM自动播放",
+    //             type: "check",
+    //             desc: "阻止页内BGM自动播放.",
+    //         },
+    //     ],
+    //     core: () => {
+    //         let clearAutoPlay = () => {
+    //             $("iframe[id*=iframe_mp3]:not([id*=no_autoplay])").each(
+    //                 (i, v) => {
+    //                     // 重构播放器,去除自动播放属性
+    //                     let player = document.createElement("iframe");
+    //                     let hidden = document.createElement("div");
+    //                     hidden.id = v.id;
+    //                     hidden.style.display = "none";
+    //                     player.id = v.id + "_no_autoplay";
+    //                     player.width = v.width;
+    //                     player.height = v.height;
+    //                     player.frameBorder = v.frameBorder;
+    //                     player.allow = v.allow;
+    //                     player.src = v.src.replace("&auto=1", "");
+    //                     v.after(hidden);
+    //                     v.after(player);
+    //                     v.remove();
+    //                     dlg("Canceled all autoplay");
+    //                 },
+    //             );
+    //         };
+    //         $(this).on("DiscuzAjaxGetFinished DiscuzAjaxPostFinished", () => {
+    //             setTimeout(clearAutoPlay, 100);
+    //         });
+    //         $(clearAutoPlay);
+    //     },
+    // };
     let rememberEditorMode = {
         runcase: () => {
             return MExt.ValueStorage.get("remenberEditMode");
@@ -1763,16 +1702,16 @@ div.tip.tip_4[id*=md_] p {
                 localStorage.setItem("MExt_EditMode", "false");
             }
             $(() => {
-                dlg("Remenber Editor Mode actived.");
+                dlg("已启用编辑模式记忆。");
                 $("#e_switchercheck").on("click", (e) => {
-                    dlg("Editor mode switch.");
+                    dlg("编辑器模式已切换。");
                     localStorage.setItem(
                         "MExt_EditMode",
                         e.currentTarget.checked.toString(),
                     );
                 });
                 if (localStorage.getItem("MExt_EditMode") == "true") {
-                    dlg("Switch editor mode");
+                    dlg("编辑器模式已切换。");
                     $("#e_switchercheck").click();
                 }
             });
@@ -1791,7 +1730,7 @@ div.tip.tip_4[id*=md_] p {
                 desc: "列表高亮显示帖子类型.",
             },
         ],
-        style: `.tl .icn {
+        style: /* css */ `.tl .icn {
     background-color: rgba(200, 200, 200, 0.3)!important;
     background-image: linear-gradient(-90deg, rgb(251 242 219), transparent);
     border-left: 3px solid rgb(200, 200, 200);
@@ -1914,7 +1853,7 @@ div.tip.tip_4[id*=md_] p {
                     );
                     style.borderLeftColor = v.style.color;
                 });
-                dlg("Thread list highlighting done.");
+                dlg("已启用帖子类型高亮。");
             };
             $(highlighting);
             let waiter = 0;
@@ -1934,95 +1873,95 @@ div.tip.tip_4[id*=md_] p {
             });
         },
     };
-    let fixAnchor = {
-        runcase: () => {
-            return MExt.ValueStorage.get("fixAnchor");
-        },
-        config: [
-            {
-                id: "fixAnchor",
-                default: false,
-                name: "帖内锚点修复",
-                type: "check",
-                desc: "防止帖内锚点被意外的赋予样式.",
-            },
-        ],
-        style: `table.plhin td.t_f span[id]:not([id^=anchor-]), .fastpreview span[id]:not([id^=anchor-]) {
-    display: none!important
-}`,
-        core: () => {
-            let lastHash = null;
-            let handleAnchorJump = () => {
-                if (
-                    !location.hash ||
-                    location.hash.substr(0, 1) !== "#" ||
-                    lastHash === location.hash
-                )
-                    return;
-                lastHash = location.hash;
-                const hash = lastHash.substr(1);
-                if (hash.length == 0) return;
-                const offset = $(`span#anchor-${hash}`).offset();
-                const body = unsafeWindow.document.scrollingElement;
-                if (!offset) return;
-                $(body).animate(
-                    {
-                        scrollTop: offset.top - 48,
-                    },
-                    300,
-                );
-            };
-            let fix = () => {
-                $(
-                    "table.plhin td.t_f span[id]:not([id^=anchor-]), .fastpreview .bm_c div[id^=post_] span[id]:not([id^=anchor-])",
-                ).each((i, v) => {
-                    v.id = "anchor-" + v.id;
-                });
-                handleAnchorJump();
-                dlg("Anchor fixed.");
-            };
-            $(fix);
-            $(this)
-                .on("DiscuzAjaxGetFinished DiscuzAjaxPostFinished", fix)
-                .on("hashchange", handleAnchorJump);
-        },
-    };
-    let replaceFlash = {
-        runcase: () => {
-            return MExt.ValueStorage.get("replaceFlash");
-        },
-        config: [
-            {
-                id: "replaceFlash",
-                default: true,
-                name: "Flash播放器替换",
-                type: "check",
-                desc: "将网易云Flash播放器替换成H5播放器.",
-            },
-        ],
-        core: () => {
-            let replace = () => {
-                $("span[id*=swf] embed").each((i, v) => {
-                    let player = document.createElement("iframe");
-                    if (v.src.indexOf("style/swf/widget.swf") == -1) {
-                        return;
-                    }
-                    player.src = v.src
-                        .replace("style/swf/widget.swf", "outchain/player")
-                        .replace("sid=", "id=");
-                    player.width = v.width;
-                    player.height = v.height;
-                    player.frameBorder = "no";
-                    player.allow = "autoplay; fullscreen";
-                    player.id = v.parentElement.id + "_no_autoplay";
-                    v.parentElement.after(player);
-                    v.parentElement.remove();
-                });
-            };
-            $(replace);
-            $(this).on("DiscuzAjaxGetFinished DiscuzAjaxPostFinished", replace);
-        },
-    };
+    //     let fixAnchor = {
+    //         runcase: () => {
+    //             return MExt.ValueStorage.get("fixAnchor");
+    //         },
+    //         config: [
+    //             {
+    //                 id: "fixAnchor",
+    //                 default: false,
+    //                 name: "帖内锚点修复",
+    //                 type: "check",
+    //                 desc: "防止帖内锚点被意外的赋予样式.",
+    //             },
+    //         ],
+    //         style: `table.plhin td.t_f span[id]:not([id^=anchor-]), .fastpreview span[id]:not([id^=anchor-]) {
+    //     display: none!important
+    // }`,
+    //         core: () => {
+    //             let lastHash = null;
+    //             let handleAnchorJump = () => {
+    //                 if (
+    //                     !location.hash ||
+    //                     location.hash.substr(0, 1) !== "#" ||
+    //                     lastHash === location.hash
+    //                 )
+    //                     return;
+    //                 lastHash = location.hash;
+    //                 const hash = lastHash.substr(1);
+    //                 if (hash.length == 0) return;
+    //                 const offset = $(`span#anchor-${hash}`).offset();
+    //                 const body = unsafeWindow.document.scrollingElement;
+    //                 if (!offset) return;
+    //                 $(body).animate(
+    //                     {
+    //                         scrollTop: offset.top - 48,
+    //                     },
+    //                     300,
+    //                 );
+    //             };
+    //             let fix = () => {
+    //                 $(
+    //                     "table.plhin td.t_f span[id]:not([id^=anchor-]), .fastpreview .bm_c div[id^=post_] span[id]:not([id^=anchor-])",
+    //                 ).each((i, v) => {
+    //                     v.id = "anchor-" + v.id;
+    //                 });
+    //                 handleAnchorJump();
+    //                 dlg("Anchor fixed.");
+    //             };
+    //             $(fix);
+    //             $(this)
+    //                 .on("DiscuzAjaxGetFinished DiscuzAjaxPostFinished", fix)
+    //                 .on("hashchange", handleAnchorJump);
+    //         },
+    //     };
+    // let replaceFlash = {
+    //     runcase: () => {
+    //         return MExt.ValueStorage.get("replaceFlash");
+    //     },
+    //     config: [
+    //         {
+    //             id: "replaceFlash",
+    //             default: true,
+    //             name: "Flash播放器替换",
+    //             type: "check",
+    //             desc: "将网易云Flash播放器替换成H5播放器.",
+    //         },
+    //     ],
+    //     core: () => {
+    //         let replace = () => {
+    //             $("span[id*=swf] embed").each((i, v) => {
+    //                 let player = document.createElement("iframe");
+    //                 if (v.src.indexOf("style/swf/widget.swf") == -1) {
+    //                     return;
+    //                 }
+    //                 player.src = v.src
+    //                     .replace("style/swf/widget.swf", "outchain/player")
+    //                     .replace("sid=", "id=");
+    //                 player.width = v.width;
+    //                 player.height = v.height;
+    //                 player.frameBorder = "no";
+    //                 player.allow = "autoplay; fullscreen";
+    //                 player.id = v.parentElement.id + "_no_autoplay";
+    //                 v.parentElement.after(player);
+    //                 v.parentElement.remove();
+    //             });
+    //         };
+    //         $(replace);
+    //         $(this).on("DiscuzAjaxGetFinished DiscuzAjaxPostFinished", replace);
+    //     },
+    // };
     let restrictMedalLine = {
         runcase: () => {
             return MExt.ValueStorage.get("maxMedalLine") >= 0;
@@ -2037,7 +1976,7 @@ div.tip.tip_4[id*=md_] p {
             },
         ],
         style:
-            `.md_ctrl span.toggle-all {
+            /* css */ `.md_ctrl span.toggle-all {
             width: 125px;
             display: block;
             position: absolute;
@@ -2076,7 +2015,7 @@ div.tip.tip_4[id*=md_] p {
                     return;
                 }
                 // 限制勋章行数
-                dlg("Restricting line...");
+                dlg("已启用限制勋章行数。");
                 $(".md_ctrl:not([restrictline])")
                     .attr("restrictline", "true")
                     .append(
@@ -2107,106 +2046,6 @@ div.tip.tip_4[id*=md_] p {
             );
         },
     };
-    let quickAt = {
-        runcase: () => {
-            return MExt.ValueStorage.get("quickAtList").length > 0;
-        },
-        config: [
-            {
-                id: "quickAtList",
-                default: "",
-                name: "快速 @ 列表",
-                type: "text",
-                desc: '按下Ctrl+Shift+A/或者按钮以快速在当前输入框内插入预定义的@用户名代码.用户名之间用","(半角逗号)分隔.',
-            },
-        ],
-        style:
-            `#fastpostatList.in_editorbtn, #postatList {
-            background-size: 54px;
-            background-position: -23px 3px;
-        }
-
-        #fastpostatList, #postatList {
-            background-image: url(` +
-            staticRes.atBtnImage +
-            `);
-            background-size: 50px;
-            background-position: -6px 2px;
-        }`,
-        core: () => {
-            let getAtCode = () => {
-                // 分隔list
-                let quickAtList = Stg.get("quickAtList").split(",");
-                let atstr = "";
-                //拼接@代码
-                $(quickAtList).each((i, v) => {
-                    atstr += "@" + v + " ";
-                });
-                return atstr;
-            };
-            // 将函数暴露到全局
-            MExt_Func_getAtCode = getAtCode;
-            // 监听按键事件
-            $(document).on("keydown", (e) => {
-                if (e.shiftKey && e.ctrlKey && e.keyCode == 65) {
-                    // 判断是否在输入框内
-                    if (
-                        $(document.activeElement).prop("nodeName") == "INPUT" &&
-                        $(document.activeElement).prop("type") == "text"
-                    ) {
-                        // 拼接方法插入
-                        $(document.activeElement).val(
-                            $(document.activeElement).val() + getAtCode(),
-                        );
-                        dlg("@ string added");
-                    } else if (
-                        $(document.activeElement).prop("nodeName") == "TEXTAREA"
-                    ) {
-                        // discuz内建函数插入
-                        seditor_insertunit("fastpost", getAtCode(), "");
-                        dlg("@ string added");
-                    }
-                }
-            });
-            // 高级编辑模式插入@代码
-            $(() => {
-                if ($("#e_iframe").length) {
-                    // 由于高级模式的输入框是iFrame,无法直接监听,故再次监听高级输入框的按键事件
-                    $($("#e_iframe")[0].contentWindow).on("keydown", (e) => {
-                        if (e.shiftKey && e.ctrlKey && e.keyCode == 65) {
-                            // 判断是否在输入框内
-                            if (
-                                $(document.activeElement).prop("nodeName") ==
-                                "IFRAME"
-                            ) {
-                                //discuz内建函数插入
-                                insertText(getAtCode());
-                                dlg("@ string added");
-                            }
-                        }
-                    });
-                }
-            });
-            let hookReplyBtn = () => {
-                if ($("#postatList").length > 0) {
-                    return false;
-                }
-                $("#postat.fat").after(
-                    '<a id="postatList" href="javascript:;" title="快速@" onclick="seditor_insertunit(\'post\',MExt_Func_getAtCode(), \'\');">快速@</a> ',
-                );
-                dlg("Reply at bottons appends.");
-            };
-            $("#append_parent").on("DOMNodeInserted", hookReplyBtn);
-            $(() => {
-                $("#fastpostat").after(
-                    '<a id="fastpostatList" href="javascript:;" title="快速@" class="" onclick="seditor_insertunit(\'fastpost\',MExt_Func_getAtCode(), \'\');">快速@</a> ',
-                );
-                $("#e_adv_s1").append(
-                    '<a id="fastpostatList" href="javascript:;" title="快速@" class="in_editorbtn" onclick="insertText(MExt_Func_getAtCode());">快速@</a>',
-                );
-            });
-        },
-    };
     let miscFix = {
         runcase: () => {
             return /^[01]*$/.exec(Stg.get("miscFix"));
@@ -2224,38 +2063,38 @@ div.tip.tip_4[id*=md_] p {
         core: () => {
             let fixconf = Stg.get("miscFix").split("");
             let fixlist = [
-                // 暗牧悬浮预览
-                {
-                    style: '.t_f font[style*="background-color:black"], .t_f font[style*="background-color:#000"] {transition-duration: .3s;transition-delay: .5s;cursor: default;}.t_f font[style*="background-color:black"]:hover, .t_f font[style*="background-color:#000"]:hover {transition-delay: 0s;background-color: transparent!important;}',
-                },
-                //增加空方法,用于修复论坛的一个报错.
-                { script: "announcement = () => {};relatekw = ()=>{};" },
-                //修复页脚问题
-                {
-                    style: ".mc_map_wp{min-height:calc(100vh - 202px)!important;}",
-                },
+                // // 暗牧悬浮预览
+                // {
+                //     style: '.t_f font[style*="background-color:black"], .t_f font[style*="background-color:#000"] {transition-duration: .3s;transition-delay: .5s;cursor: default;}.t_f font[style*="background-color:black"]:hover, .t_f font[style*="background-color:#000"]:hover {transition-delay: 0s;background-color: transparent!important;}',
+                // },
+                // //增加空方法,用于修复论坛的一个报错.
+                // { script: "announcement = () => {};relatekw = ()=>{};" },
+                // //修复页脚问题
+                // {
+                //     style: ".mc_map_wp{min-height:calc(100vh - 202px)!important;}",
+                // },
                 //修复用户组页面不对齐的问题
-                { style: ".tdats .tb{margin-top:0px}" },
-                // 修复编辑器@超级加倍的问题
-                {
-                    script: '$(()=>{if(typeof setEditorEvents != "undefined"){let __setEditorEvents = setEditorEvents;setEditorEvents= ()=>{ __setEditorEvents();setEditorEvents=()=>{};}}})',
-                },
+                { style: ".tdats .tb{margin-top:11px}" },
+                // // 修复编辑器@超级加倍的问题
+                // {
+                //     script: '$(()=>{if(typeof setEditorEvents != "undefined"){let __setEditorEvents = setEditorEvents;setEditorEvents= ()=>{ __setEditorEvents();setEditorEvents=()=>{};}}})',
+                // },
                 // 允许改变个人签名编辑框大小
                 { style: "#sightmlmessage{resize:vertical;}" },
-                // 按住shift点击带有超链接的图片则不打开链接
-                {
-                    script: `$(()=>{$("img.zoom").parent().each((i,v)=>{if(v.nodeName=="A"){$(v).on("click",(e)=>{console.log(e);if(e.shiftKey){e.preventDefault();}})}})})`,
-                },
-                // 修复某些页面书框被撕裂的问题
-                {
-                    script: "$(()=>{if(!$('.mc_map_wp .mc_map_border_foot').length){$('.mc_map_border_foot').remove();$('.mc_map_wp').append('<div class=\"mc_map_border_foot\"></div>')}})",
-                },
-                // 主动聚焦编辑器iframe,修复报错问题.
-                {
-                    script: "$(()=>{if(typeof wysiwyg !='undefined' && wysiwyg){editwin.document.body.focus()};})",
-                },
-                // 小提示样式修复
-                { style: ".pc_inner{padding-left:12px}" },
+                // // 按住shift点击带有超链接的图片则不打开链接
+                // {
+                //     script: `$(()=>{$("img.zoom").parent().each((i,v)=>{if(v.nodeName=="A"){$(v).on("click",(e)=>{console.log(e);if(e.shiftKey){e.preventDefault();}})}})})`,
+                // },
+                // // 修复某些页面书框被撕裂的问题
+                // {
+                //     script: "$(()=>{if(!$('.mc_map_wp .mc_map_border_foot').length){$('.mc_map_border_foot').remove();$('.mc_map_wp').append('<div class=\"mc_map_border_foot\"></div>')}})",
+                // },
+                // // 主动聚焦编辑器iframe,修复报错问题.
+                // {
+                //     script: "$(()=>{if(typeof wysiwyg !='undefined' && wysiwyg){editwin.document.body.focus()};})",
+                // },
+                // // 小提示样式修复
+                // { style: ".pc_inner{padding-left:12px}" },
             ];
             let styleContent = "";
 
@@ -2288,35 +2127,55 @@ div.tip.tip_4[id*=md_] p {
         ],
         core: () => {
             // 获得举报内容列表函数
-            let getReasons = () => {
-                // 分隔list
-                let reportReason = Stg.get("myReportReason").split("\n");
-                let rrstr = '<p class="mtn mbn">';
-                //拼接HTML
-                $(reportReason).each((i, v) => {
-                    rrstr +=
-                        "<label><input type=\"radio\" name=\"report_select\" class=\"pr\" onclick=\"$('report_other').style.display='none';$('report_msg').style.display='none';$('report_message').value='" +
-                        v +
-                        '\'" value="' +
-                        v +
-                        '"> ' +
-                        v +
-                        "</label><br>";
-                });
-                rrstr += "</p>";
-                return rrstr;
-            };
-            // 举报按钮钩子函数
-            let hookReportWin = () => {
-                if ($("#report_reasons[appended]").length > 0) {
-                    return false;
-                }
-                let reportContent = getReasons();
-                $("#report_reasons")
-                    .attr("appended", "true")
-                    .before(reportContent);
-            };
-            $("#append_parent").on("DOMNodeInserted", hookReportWin);
+            // let getReasons = () => {
+            //     // 分隔list
+            //     let reportReason = Stg.get("myReportReason").split("\n");
+            //     let rrstr = '<p class="mtn mbn">';
+            //     //拼接HTML
+            //     $(reportReason).each((i, v) => {
+            //         rrstr +=
+            //             "<label><input type=\"radio\" name=\"report_select\" class=\"pr\" onclick=\"$('report_other').style.display='none';$('report_msg').style.display='none';$('report_message').value='" +
+            //             v +
+            //             '\'" value="' +
+            //             v +
+            //             '"> ' +
+            //             v +
+            //             "</label><br>";
+            //     });
+            //     rrstr += "</p>";
+            //     return rrstr;
+            // };
+            // // 举报按钮钩子函数
+            // let hookReportWin = () => {
+            //     if ($("#report_reasons[appended]").length > 0) {
+            //         return false;
+            //     }
+            //     let reportContent = getReasons();
+            //     $("#report_reasons")
+            //         .attr("appended", "true")
+            //         .before(reportContent);
+            //     console.log("append");
+            // };
+            // observe("#append_parent", hookReportWin);
+            let reportReason = Stg.get("myReportReason").split("\n");
+            const customReasons = [
+                "广告垃圾",
+                "违规内容",
+                "恶意灌水",
+                "重复发帖",
+                ...reportReason,
+                "其他",
+            ];
+
+            Object.defineProperty(unsafeWindow, "reasons", {
+                configurable: true,
+                get() {
+                    return customReasons;
+                },
+                set(v) {
+                    dlg(`已屏蔽重赋值${v}`);
+                },
+            });
         },
     };
     let myCSS = {
@@ -2344,7 +2203,7 @@ div.tip.tip_4[id*=md_] p {
                 default: "",
                 name: "自定义工具菜单链接",
                 type: "textarea",
-                desc: '在右上角"工具"菜单里添加自定义的链接,以"[名称] [链接]"的格式添加(如"个人主页 home.php"),一行一个.',
+                desc: '在右上角"工具"菜单里添加自定义的链接,以"[名称] [链接]"的格式添加(如"个人主页 home.php"),一行一个,站外链接需要带"https://"开头.',
             },
         ],
         core: () => {
@@ -2357,10 +2216,10 @@ div.tip.tip_4[id*=md_] p {
                     }
                     // 添加
                     $(() => {
-                        $("#usertools_menu").append(
+                        $("#mn_N20dc_menu").append(
                             '<li><a href="' +
                                 v.split(" ")[1] +
-                                '">' +
+                                '" target="_blank">' +
                                 v.split(" ")[0] +
                                 "</a></li>",
                         );
@@ -2369,28 +2228,460 @@ div.tip.tip_4[id*=md_] p {
             });
         },
     };
+
+    staticRes.rainbowBtnImage =
+        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAAAAXNSR0IB2cksfwAAAAlwSFlzAAALEwAACxMBAJqcGAAACetJREFUeJzNWF2MXWUVXd/5u+f+9s7PnQ7TaQsUSluwLTbwpGkhRHkcXxQ10UGDLyZ0XtT4ppFoDFFrwoPRyGj0RaMmY6KBGEmL/EiKUkCgZWBqO23HmaEzc+/c3/Pzfa79ndtSILRVkHgmd+bee8759vrWXnvtfcbD/9nhfZDBdJJMKMfZY9IUOo6AJIGBWvMrlR9+IICM1hO6293TOfEy2ideqZ5+8IGp3ulTUIsL0J02km4bOb8IY4ziceh/AoiLTyRvLO+pP3G4evwr90+lzz3D4C0EBvAdF3lHwVcuXKMAx0Hop3Jb9cL97xsgHUUT60ef3n+GIBp/fQpu1GYwDyXHwM/l4KiA6YmgHRCMIFdwdEqQ6VvWec+AdBxPrP75kf0n771nqjd7HKHrYMRzERQCgnCgNKDkOvT4JoUD6oYg5SclOIfXvy+ANPXRfv65/Sfv+9xU8/jzqDJ4tZiHbxx4WgCQDRUh9Q20n8AvR3DLBFTpwSmkcEMN5chr+L0Diutrk+e++8B0Y+a3KKgE4/kQLmlQRnP3EXo+g+Z78Dem8MZ68Aa6UAQGJewwRUKb8GaEndZ7A7T+4rHJuS/cM40zJ1HLFZFzA66vkbgx0qADv9ZCaStB1JgiMgM3sUDkEOlAqf57akiEbdR/B0hK+PzMr/ef/PIXpypxE9VSCD8VJfSQ5Lowo3VUbtDwBtsURpSBUBkR8ks4MSrTi+JdWn5cpoyacv9TQBTu5L8e+t50/RcPoxb4KIQFy3rkRVCVNeR3dhCMEZQnRidAjD1/gQDNV8KobujDlPJAMYQqunB8nywWJcSeqwZER51c+P63p9dmfoWhMERJeeI1iHLryG1poriLGgibZCWxZBihgl4Ts7YNhaUGS8DoIMLaAK8LicrpM0eWWG3KsfxMNI7+bapy275DlwVEi5888+C3phu/+w0GCmSGhibVExfWUbplHcGmLhA00VeH/aO5fhoS9NYacmM1oJy3wICs1JUVdJY40ZNYQLaRtHpZhqSsl37yECuJzBTyCG0VJdBM0YZb63A3dshEfHHxlDtOQhdq8wiC668B8kEmYKfvM7xXqayytE2lRx9KeacHuUJYvyyg+qN/OLD20x/ZNOW5qIBJK3WUb2vDGRLRxtmuubgYnB4sI9i1FWqolFHVL20JoylmjYAvF21a9UpXoxMrrCcKLhHcvsEy8O6A2q+9Ojl336cPDnk+SrwjRQyzYRXlfR2o4VVoilfIMdRKRK04N44h2LaJ6XPfrCqykTge7/Sx0ooxtw6caxqsdAxi5ZOt1IaPyOTtl8R+ByDd7Uy8/qXPThe6HVtNRtKUX0d5b4PMdC0YZoe6YJUFJHz3DXDGB/m99KZsjYSM9piSU3XgleUOFrs+P7OiyJShqLkFruGwp/E6N2fvcd4N0OIvf3YgPf4ShgsEw8ix10RpNzUz0uZisfQEm4Y478Hbsw3uNQO2YUru7PUMPE8renYxwXLbQ6JY5ghxQcqZDzqICdpPfGiTQdFJ+k5A7X/OTc59/p6Dw0HAEy610YV/XQu+VJMbZcxImgIutvt6uKNVmyLHZKbXJW3HlmI8f95BW5UyI+wDMFxRmwCRKaJjQrTiErq9MuK4YmOrt4vaGD1x+msHp3NRi6miXxjqhiIu7aDP+C25wG6vxzuCnVvhjA0idbNRQjNgQ4d4Yr6LuVYePSdn05MVe45GUcJqNIb5+rU4tb4Na1ENcVKxqRtwWAR3Ahes4yKgzj9ePND8y+MYCeiiJkXid1G6idznW8ioUTY13ngNzpZh2xctM1z0DePjsbkIi1GIyAkhNWW7l96Ape51eOGN3QSygxMrtaZCGUC4Zt5iMGnuAiNvAhJ2zn596mCoE+RkkOLY4LA3eZIqVoNcmjJ6XM0jv2Nz5rYiQy7SMHkcOZXiXEKdOJmnaLLSTq7BS0v78Mr521DHCL/L05IcbsLJWgs3KOx6fSBvqbJofn5v4/BjGAwDu1xMdirbuA8/sbnNqkohuGkLTN7vO3+Krsrh6TMRFjo5OjR1YgWqsBLfiCfnD2ChuYNaGrIeZGuLfSVMTAaZFDq9GKVUPjOuvoSh83/8fTWgMYWOsobn19rwWOJZo8yyq0aqdOeBbMoz0iwDvLxs8GqTXuL4toRjU8BybxseP30XFnu7WHHUB9Mp3arAKip0eiifXUHx3CoK9Tb8uIcwLwPaPpkmMkAyC89+5hMHy5x/xUeM30Fxs1RVnA1cNLguYee2j9ssCZiU3y1HHp5dThAxxdKfEu2jHo/jyPwdWIhuoZnm7bzjM1Cx20NtdgkDc0sotTvIcZYWQbJeEagLM3Wfoc7sib3x6ZMIOPVBmmex1+9TkWVHhKzIjFOtZO1Aeha18uJCjBb1I+1JqqxrhvH0wkcp4t30ngInSDYKpqO62sTo3+cwsthCyOcxSZuSlmKLxEPfF0THGaD6U49Xc6TGd8TuYwQjqZ30Lh3k/E21vpUaG3ypG2B2nQOW8qweElPC7OqHMd/4EPdcsUFFvEMrbYw/NYuhBr0s1dadJWyqI0Rph8ATqieShY9cTFnv6DMHQ/Yrmx6vh6Am7PR9VUAFtMihSlb6NryH184ntkdlO3PR6Y7hhaVb0TM1e5OkdagRYfTo6xiqNy0zCb9MDOdtTpvj23PYd+e2mZ17R48NbsyvyUPiyqOPVPspexmDvsxUZMiLOZAnFpDElzFBE4wbvDlk9gjg1FpEBjnnMC2pLmOusRONZAu1JSBTlCNq5tjrqK00KFKyxSGpZ5ocDhPce//emY/cfePhsJA7dGm5D3787jULyLQ6CDl88SkJboH0hWlGjZEZh2+Hq7ZdaKt4j6XMQV+HdtaR4SI1FZxYu8mKWC4PWYYDZ1sYWqhDHkrFOFuaUhju4Ks/uOvn228em8RlDs9anChTHuLK2paR6EfGcvkbDBUtE3KkbAcL6/K8JQ3TsfPNUmsjGr2NBORbo3SSBOWTy/QZnT0gMk3aXcfUdw7MXAlMBkgmOnFyCyi2wU2/mpTPc+zqSt5bDsFyd20qJTidBWc711KWg3YIE9ctN9qoLDVY7lnlxEkbd3xqM3bt3XT4SmAyQP2ObKh4VUj6gjYZyJxv24T9v4D91iUbxqZBLECz7Jd7w3aUsM/qdO/iUp1pizKGZYbmQ+PHPnnzjOO6h64ExgJynf5sSxZyuczWbUFJ2lz34oOdZsCEDMSp0z8p5e6h2R3m9XRj7kNYCRtdePQfh61AUzuj1/vYOF69KnYyhpB+Uyoh4cSXPe7iYoWl7G1uP6UpTTOK2R50f3C3JHIzSaHPGMmkiwYtnc3QUqFpgs3bR9Y837sqdiyga5889o2Ln/709tNSic9cYYkfv+XTibedffi5q4WSHf8GylWZUzwMKbYAAAAASUVORK5CYII=";
+    let quickRainbow = {
+        runcase: () => {
+            return MExt.ValueStorage.get("quickRainbow");
+        },
+        config: [
+            {
+                id: "quickRainbow",
+                default: true,
+                name: "编辑器支持彩虹文字",
+                type: "check",
+                desc: "快速向贴内插入彩虹文字.",
+            },
+        ],
+        style:
+            `#fastpostrainbow, #postrainbow,#e_rbn_s1 {
+background-image: url(` +
+            staticRes.rainbowBtnImage +
+            `);
+background-size: 28px;
+background-position: center top;
+}
+#fastpostrainbow.in_editorbtn , #postrainbow {
+background-size: 16px;
+background-position: center;
+}`,
+        core: () => {
+            const row = MExt.Units.getEditorRows();
+            let rainbowFast = () => {
+                let target = document.getElementById("fastpostmessage");
+                if (target.selectionStart != target.selectionEnd) {
+                    let str = target.value.substr(
+                        target.selectionStart,
+                        target.selectionEnd,
+                    );
+                    seditor_insertunit("fastpost", gencode(str, 0), "");
+                }
+            };
+            let rainbowFloat = () => {
+                let target = document.getElementById("postmessage");
+                if (target.selectionStart != target.selectionEnd) {
+                    let str = target.value.substr(
+                        target.selectionStart,
+                        target.selectionEnd,
+                    );
+                    seditor_insertunit("post", gencode(str, 0), "");
+                }
+            };
+            let rainbow = () => {
+                if (getSel() == "") {
+                    return;
+                }
+                addSnapshot(getEditorContents());
+                insertText(gencode(getSel(), wysiwyg));
+            };
+            let hookReplyBtn = () => {
+                if ($("#postrainbow").length > 0) {
+                    return false;
+                }
+                let btn = document.createElement("a");
+                btn.id = "postrainbow";
+                btn.href = "javascript:;";
+                btn.title = "彩虹文字";
+                btn.addEventListener("click", rainbowFloat);
+                btn.innerText = "彩虹文字";
+                $("#postat.fat").after(btn);
+                dlg("Reply bottons appends.");
+            };
+            // $("#append_parent").on("DOMNodeInserted", hookReplyBtn);
+            observe("#append_parent", hookReplyBtn);
+            $(() => {
+                let btn = document.createElement("a");
+                btn.id = "fastpostrainbow";
+                btn.href = "javascript:;";
+                btn.title = "彩虹文字";
+                btn.className = "in_editorbtn";
+                btn.addEventListener("click", rainbowFast);
+                btn.innerText = "彩虹文字";
+                $("#fastpostat").after(btn);
+                let btn2 = document.createElement("a");
+                btn2.id = "e_rbn_s1";
+                btn2.href = "javascript:;";
+                btn2.title = "彩虹文字";
+                btn2.addEventListener("click", rainbow);
+                btn2.innerText = "彩虹文字";
+                // $("#e_adv_s1").append(btn2);
+                row.element.append(btn2);
+            });
+            let nextColor = (clr, step) => {
+                if (clr.r == 255 && clr.b != 255) {
+                    clr.g -= step;
+                } else if (clr.g == 255 && clr.r != 255) {
+                    clr.b -= step;
+                } else if (clr.b == 255 && clr.g != 255) {
+                    clr.r -= step;
+                }
+                while (
+                    clr.r > 255 ||
+                    clr.r < 0 ||
+                    clr.g > 255 ||
+                    clr.g < 0 ||
+                    clr.b > 255 ||
+                    clr.b < 0
+                ) {
+                    if (clr.r > 255) {
+                        clr.g += 255 - clr.r;
+                        clr.r = 255;
+                        continue;
+                    }
+                    if (clr.g < 0) {
+                        clr.b -= clr.g;
+                        clr.g = 0;
+                        continue;
+                    }
+                    if (clr.b > 255) {
+                        clr.r += 255 - clr.b;
+                        clr.b = 255;
+                        continue;
+                    }
+                    if (clr.r < 0) {
+                        clr.g -= clr.r;
+                        clr.r = 0;
+                        continue;
+                    }
+                    if (clr.g > 255) {
+                        clr.b += 255 - clr.g;
+                        clr.g = 255;
+                        continue;
+                    }
+                    if (clr.b < 0) {
+                        clr.r -= clr.b;
+                        clr.b = 0;
+                        continue;
+                    }
+                }
+                return clr;
+            };
+            let dCode = (str) => {
+                while (str.length < 2) {
+                    str = "0" + str;
+                }
+                return str;
+            };
+            let HexC = (color) => {
+                return (
+                    "#" +
+                    dCode(parseInt(color.r).toString(16)) +
+                    dCode(parseInt(color.g).toString(16)) +
+                    dCode(parseInt(color.b).toString(16))
+                );
+            };
+            let gencode = (str, type) => {
+                let color = {
+                    r: 255,
+                    g: 0,
+                    b: 0,
+                };
+                let len = str.length;
+                let step = 1530 / len < 1 ? 1 : 1530 / len;
+                let rstr = "";
+                for (let i = 0; i < len; i++) {
+                    if (type == 0) {
+                        rstr +=
+                            "[color=" +
+                            HexC(color) +
+                            "]" +
+                            str.charAt(i) +
+                            "[/color]";
+                    } else {
+                        rstr +=
+                            '<font color="' +
+                            HexC(color) +
+                            '">' +
+                            str.charAt(i) +
+                            "</font>";
+                    }
+                    color = nextColor(color, step);
+                }
+                return rstr;
+            };
+        },
+    };
+
+    let quickAt = {
+        runcase: () => {
+            return MExt.ValueStorage.get("quickAtList").length > 0;
+        },
+        config: [
+            {
+                id: "quickAtList",
+                default: "",
+                name: "快速 @ 列表",
+                type: "text",
+                desc: '按下Ctrl+Shift+A/或者按钮以快速在当前输入框内插入预定义的@用户名代码.用户名之间用","(半角逗号)分隔.',
+            },
+        ],
+        style:
+            /*css */ `#fastpostatList.in_editorbtn, #postatList {
+            background-size: 54px;
+            background-position: -23px 3px;
+        }
+
+        #fastpostatList, #postatList {
+            background-image: url(` +
+            staticRes.atBtnImage +
+            `);
+            background-size: 50px;
+            background-position: -6px 2px;
+        }`,
+        core: () => {
+            const row = MExt.Units.getEditorRows();
+            let getAtCode = () => {
+                // 分隔list
+                let quickAtList = Stg.get("quickAtList").split(",");
+                let atstr = "";
+                //拼接@代码
+                $(quickAtList).each((i, v) => {
+                    atstr += "@" + v + " ";
+                });
+                return atstr;
+            };
+            // 将函数暴露到全局
+            MExt_Func_getAtCode = getAtCode;
+            // 监听按键事件
+            $(document).on("keydown", (e) => {
+                if (e.shiftKey && e.ctrlKey && e.keyCode == 65) {
+                    // 判断是否在输入框内
+                    if (
+                        $(document.activeElement).prop("nodeName") == "INPUT" &&
+                        $(document.activeElement).prop("type") == "text"
+                    ) {
+                        // 拼接方法插入
+                        $(document.activeElement).val(
+                            $(document.activeElement).val() + getAtCode(),
+                        );
+                        dlg("@ 已添加");
+                    } else if (
+                        $(document.activeElement).prop("nodeName") == "TEXTAREA"
+                    ) {
+                        // discuz内建函数插入
+                        seditor_insertunit("fastpost", getAtCode(), "");
+                        dlg("@ 已添加");
+                    }
+                }
+            });
+            // 高级编辑模式插入@代码
+            $(() => {
+                if ($("#e_iframe").length) {
+                    // 由于高级模式的输入框是iFrame,无法直接监听,故再次监听高级输入框的按键事件
+                    $($("#e_iframe")[0].contentWindow).on("keydown", (e) => {
+                        if (e.shiftKey && e.ctrlKey && e.keyCode == 65) {
+                            // 判断是否在输入框内
+                            if (
+                                $(document.activeElement).prop("nodeName") ==
+                                "IFRAME"
+                            ) {
+                                //discuz内建函数插入
+                                insertText(getAtCode());
+                                dlg("@ 已添加");
+                            }
+                        }
+                    });
+                }
+            });
+            let hookReplyBtn = () => {
+                if ($("#postatList").length > 0) {
+                    return false;
+                }
+                $("#postat.fat").after(
+                    '<a id="postatList" href="javascript:;" title="快速@" onclick="seditor_insertunit(\'post\',MExt_Func_getAtCode(), \'\');">快速@</a> ',
+                );
+                dlg("Reply at bottons appends.");
+            };
+            observe("#append_parent", hookReplyBtn);
+            $(() => {
+                $("#fastpostat").after(
+                    '<a id="fastpostatList" href="javascript:;" title="快速@" class="" onclick="seditor_insertunit(\'fastpost\',MExt_Func_getAtCode(), \'\');">快速@</a> ',
+                );
+                // $("#e_adv_s1").append(
+                $(row.selector).after(
+                    '<a id="fastpostatList" href="javascript:;" title="快速@" class="in_editorbtn" onclick="insertText(MExt_Func_getAtCode());">快速@</a>',
+                );
+            });
+        },
+    };
+
+    const todayStr = () => {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    };
+
+    const SIGN_DAY = "autoSignLastDate";
+
+    let autoSign = {
+        runcase: () => MExt.ValueStorage.get("autoSign"),
+
+        config: [
+            {
+                id: "autoSign",
+                default: true,
+                type: "check",
+                name: "自动签到",
+                desc: "每日首次登录自动签到",
+            },
+        ],
+
+        core: () => {
+            if (location.href.includes("dc_signin:sign")) {
+                const msgbox = document.querySelector("#messagetext");
+
+                // 已签到
+                if (msgbox && msgbox.innerHTML.includes("签过到")) {
+                    Stg.set(SIGN_DAY, todayStr());
+
+                    dlg("今日已签到");
+
+                    setTimeout(() => {
+                        history.back();
+                    }, 500);
+
+                    return;
+                }
+
+                // 自动点击签到
+                const form = document.querySelector("#signform");
+
+                if (form) {
+                    const emotid = form.querySelector('[name="emotid"]');
+                    const content = form.querySelector('[name="content"]');
+
+                    if (emotid) emotid.value = "1";
+                    if (content) content.value = "记上一笔，hold住我的快乐！";
+
+                    setTimeout(() => {
+                        form.querySelector(
+                            "button[type=submit], input[type=submit]",
+                        )?.click();
+                        Stg.set(SIGN_DAY, todayStr());
+                        dlg("已点击签到。");
+                    }, 800);
+                }
+
+                return;
+            }
+
+            if (Stg.get(SIGN_DAY) !== todayStr()) {
+                dlg("今日未签到，正在跳转到签到页...");
+
+                // 延迟避免与页面初始化冲突
+                setTimeout(() => {
+                    location.href = "plugin.php?id=dc_signin:sign";
+                }, 1000);
+            } else {
+                dlg("今日已签到。");
+            }
+        },
+    };
+
+    let autoTask = {
+        runcase: () => MExt.ValueStorage.get("autoTask"),
+
+        config: [
+            {
+                id: "autoTask",
+                default: true,
+                type: "check",
+                name: "自动任务",
+                desc: "自动领取与完成常规任务",
+            },
+        ],
+
+        core: () => {
+            const taskArr = ["1", "3", "18", "19", "25"];
+
+            const parsePageDOM = async (url) => {
+                const res = await fetch(url, { credentials: "include" });
+                const html = await res.text();
+                return new DOMParser().parseFromString(html, "text/html");
+            };
+
+            const applyTasks = async () => {
+                const page = await parsePageDOM("/home.php?mod=task&item=new");
+                if (!page) return;
+
+                taskArr.forEach((id) => {
+                    const task = page.querySelector(
+                        `a[href^="home.php?mod=task&do=apply&id=${id}"]`,
+                    );
+                    if (task) {
+                        fetch(`/home.php?mod=task&do=apply&id=${id}`);
+                    }
+                });
+            };
+
+            const checkTasks = async () => {
+                const page = await parsePageDOM(
+                    "/home.php?mod=task&item=doing",
+                );
+                if (!page) return;
+
+                taskArr.forEach((id) => {
+                    const task = page.querySelector(`#csc_${id}`);
+
+                    if (!task) return;
+
+                    if (
+                        task.innerHTML === "100" ||
+                        ["1", "3", "18"].includes(id)
+                    ) {
+                        fetch(`/home.php?mod=task&do=draw&id=${id}`);
+                    }
+                });
+            };
+
+            // 页面启动尝试领取
+            if (Stg.get(SIGN_DAY) !== todayStr()) {
+                applyTasks();
+            }
+
+            // 回帖后检查任务
+            $(this).on(
+                "DiscuzAjaxGetFinished DiscuzAjaxPostFinished",
+                checkTasks,
+            );
+
+            // const submitBtn = document.querySelector(
+            //     '.ptm.pnpost button[type="submit"]',
+            // );
+
+            // if (submitBtn) {
+            //     submitBtn.addEventListener("click", checkTasks);
+            // }
+        },
+    };
+
     MExt.exportModule(
+        autoSign,
+        autoTask,
         fixCodeBlock,
         queryMessage,
         rememberPage,
         animationGoToTop,
-        pinnerTopBar,
-        fixTopBarPopMenu,
         hoverableMesdal,
-        viewWarns,
         removeLinkWarn,
-        useIgInQuickReply,
-        fixImgZoom,
-        disableAutoplay,
         rememberEditorMode,
         highlightThreads,
-        fixAnchor,
-        replaceFlash,
         restrictMedalLine,
         quickAt,
-        miscFix,
         myReportReason,
         myCSS,
         myLinks,
+        quickRainbow,
+        miscFix,
     );
 })();
