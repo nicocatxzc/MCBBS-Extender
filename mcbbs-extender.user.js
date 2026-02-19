@@ -2001,7 +2001,7 @@ div.tip.tip_4[id*=md_] p {
                 45
             ).toString() +
             `px!important;
-            transition:unset!important;
+            transition: max-height 1s ease !important;
         }
 
         .md_ctrl.show-all {
