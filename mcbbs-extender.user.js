@@ -266,12 +266,11 @@
         return resolve;
     })();
 
-        const isLogin = document.querySelector(
+    const isLogin = document.querySelector(
         'a[href^="member.php?mod=logging&action=login"]',
     )
         ? false
         : true;
-
 
     // 对外暴露API
     let MExt = {
@@ -602,7 +601,7 @@
     let dlg = MExt.debugLog;
     let Stg = MExt.ValueStorage;
     let observe = MExt.observe;
-    const isLogin = MExt.Units.isLogin
+    const isLogin = MExt.Units.isLogin;
     let fixCodeBlock = {
         style: /* css */ `pre:not([id]) code {
     background: #f7f7f7;
@@ -2529,9 +2528,9 @@ background-position: center;
                     '<a id="fastpostatList" href="javascript:;" title="快速@" class="" onclick="seditor_insertunit(\'fastpost\',MExt_Func_getAtCode(), \'\');">快速@</a> ',
                 );
                 // $("#e_adv_s1").append(
-                    const row = MExt.Units.getEditorRows();
-                    if (row?.selector) {
-                        $(row.selector).after(
+                const row = MExt.Units.getEditorRows();
+                if (row?.selector) {
+                    $(row.selector).after(
                         '<a id="fastpostatList" href="javascript:;" title="快速@" class="in_editorbtn" onclick="insertText(MExt_Func_getAtCode());">快速@</a>',
                     );
                 }
@@ -2552,6 +2551,12 @@ background-position: center;
                 desc: "在编辑器中加入删除线按钮",
             },
         ],
+
+        style: /*css */ `
+        #e_strike_s1,#poststrike {
+            background-position: -20px -60px;
+        }
+        `,
         core: () => {
             const wrapStrike = (str, type = 0) => {
                 if (!str) return "";
