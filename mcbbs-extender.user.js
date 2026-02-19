@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MCBBS Extender
 // @namespace    https://nicocat.cc
-// @version      release-2.2.2
+// @version      release-2.2.3
 // @description  MCBBS行为拓展/样式修复
 // @author       nicocat
 // @originAuthor Zapicc
@@ -57,7 +57,7 @@
         console.debug = function () {};
     }
     // 基本信息初始化
-    let version = "v2.2.2";
+    let version = "v2.2.3";
     let vercode = 121140;
     let valueList = {};
     let configList = [];
@@ -2876,17 +2876,22 @@ background-position: center;
                 const contrastWithBlack = getContrast(bgRGB, black);
                 const contrastWithWhite = getContrast(bgRGB, white);
 
+                const currentColor = parseRGB(getComputedStyle(element).color);
+                const contrast = getContrast(bgRGB, currentColor);
+
                 const color =
                     contrastWithBlack > contrastWithWhite
                         ? "mext-black"
                         : "mext-white";
-                element.classList.add(color);
+
+                if (contrast < 2.5) {
+                    element.classList.add(color);
+                }
             }
             setTimeout(() => {
-                const allElements = document.querySelectorAll("font");
-                allElements.forEach((el) => {
+                $("font").each((i,el)=>{
                     autoTextColor(el);
-                });
+                })
             }, 0);
         },
     };
