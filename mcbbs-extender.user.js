@@ -16,7 +16,7 @@
 // @grant        GM.deleteValue
 // @run-at       document-body
 // @license      MIT
-// @downloadURL https://update.greasyfork.org/scripts/394247/MCBBS%20Extender.user.js
+// @downloadURL https://github.com/nicocatxzc/MCBBS-Extender/raw/refs/heads/main/mcbbs-extender.user.js
 // ==/UserScript==
 
 // Core
