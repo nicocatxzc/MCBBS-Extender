@@ -2681,7 +2681,7 @@ background-position: center;
                 id: "showBlackBackground",
                 default: true,
                 type: "check",
-                name: "低对比度（显示黑幕）",
+                name: "低对比度文字高亮显示",
                 desc: "鼠标悬浮在低对比度文本上自动高亮显示文字",
             },
         ],
