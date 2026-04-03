@@ -2109,7 +2109,7 @@ div.tip.tip_4[id*=md_] p {
                 // { style: ".pc_inner{padding-left:12px}" },
                 // 签到页页码修复
                 {
-                    script: /*js*/`
+                    script: /*js*/ `
                     const params= new URLSearchParams(window.location.search);
                     const query = Object.fromEntries(params.entries());
                     if(query?.id=="dc_signin"&&query?.action=="my") {
@@ -2903,9 +2903,9 @@ background-position: center;
                 }
             }
             setTimeout(() => {
-                $("font").each((i,el)=>{
+                $("font").each((i, el) => {
                     autoTextColor(el);
-                })
+                });
             }, 0);
         },
     };
