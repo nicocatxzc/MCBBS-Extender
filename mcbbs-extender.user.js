@@ -2107,6 +2107,20 @@ div.tip.tip_4[id*=md_] p {
                 // },
                 // // 小提示样式修复
                 // { style: ".pc_inner{padding-left:12px}" },
+                // 签到页页码修复
+                {
+                    script: /*js*/`
+                    const params= new URLSearchParams(window.location.search);
+                    const query = Object.fromEntries(params.entries());
+                    if(query?.id=="dc_signin"&&query?.action=="my") {
+                        const pages = document.querySelectorAll(".pg a")
+                        pages.forEach((page)=>{
+                            console.log(page)
+                            page.href=page.href.replace("action=qdlist","action=my")
+                        })
+                    }
+                    `,
+                },
             ];
             let styleContent = "";
 
