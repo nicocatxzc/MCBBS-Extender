@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MCBBS Extender
 // @namespace    https://nicocat.cc
-// @version      release-2.2.3
+// @version      release-2.2.4
 // @description  MCBBS行为拓展/样式修复
 // @author       nicocat
 // @originAuthor Zapicc
@@ -57,7 +57,7 @@
         console.debug = function () {};
     }
     // 基本信息初始化
-    let version = "v2.2.3";
+    let version = "v2.2.4";
     let vercode = 121140;
     let valueList = {};
     let configList = [];
