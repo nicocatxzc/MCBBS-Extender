@@ -1,0 +1,27 @@
+{
+    "name": "MCBBS-Extender",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "build": "rollup -c rollup.config.mjs",
+        "watch": "rollup -c rollup.config.mjs -w",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "MIT",
+    "devEngines": {
+        "packageManager": {
+            "name": "pnpm",
+            "version": "^11.1.2",
+            "onFail": "download"
+        }
+    },
+    "type": "module",
+    "devDependencies": {
+        "@rollup/plugin-url": "^8.0.2",
+        "rollup": "^4.60.4",
+        "rollup-plugin-userscript": "^1.1.0"
+    }
+}

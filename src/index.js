@@ -1,0 +1,10 @@
+// 载入核心运行时
+import './core.js'
+// 载入静态资源
+import './assets.js'
+// 载入设置面板
+import './settings.js';
+// 载入更新提示
+import './update-manager.js';
+// 载入内置模块
+import './modules/index.js';
