@@ -76,8 +76,8 @@ div.tip.tip_4[id*=md_] h4 {
     background-color: rgba(255, 255, 255, 0.3);
 }
 
-div.tip.tip_4[id*=_menu] p,
-div.tip.tip_4[id*=md_] p {
+div.tip.tip_4[id*=_menu] p:not(.wode_shuxing p),
+div.tip.tip_4[id*=md_] p:not(.wode_shuxing p) {
     padding: 0px 10px;
     position: absolute;
     top: calc(50% + 38px);
