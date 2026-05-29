@@ -37,7 +37,6 @@
     filter: blur(2px);
 }
 
-div.tip.tip_4[id*=_menu],
 div.tip.tip_4[id*=md_] {
     width: 105px;
     height: 165px;
@@ -52,7 +51,6 @@ div.tip.tip_4[id*=md_] {
     padding: 0px;
 }
 
-div.tip.tip_4[id*=_menu] .tip_horn,
 div.tip.tip_4[id*=md_] .tip_horn {
     background-size: cover;
     background-position: center;
@@ -64,19 +62,16 @@ div.tip.tip_4[id*=md_] .tip_horn {
     left: -50%;
 }
 
-div.tip.tip_4[id*=_menu] .tip_c,
 div.tip.tip_4[id*=md_] .tip_c {
     color: rgba(255, 255, 255, 0.98);
 }
 
-div.tip.tip_4[id*=_menu] h4,
 div.tip.tip_4[id*=md_] h4 {
     text-align: center;
     padding: 10px 5px;
     background-color: rgba(255, 255, 255, 0.3);
 }
 
-div.tip.tip_4[id*=_menu] p:not(.wode_shuxing p),
 div.tip.tip_4[id*=md_] p:not(.wode_shuxing p) {
     padding: 0px 10px;
     position: absolute;
