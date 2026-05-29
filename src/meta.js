@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MCBBS Extender
 // @namespace    https://nicocat.cc
-// @version      release-2.2.4
+// @version      release-2.2.5
 // @description  MCBBS行为拓展/样式修复
 // @author       nicocat
 // @icon         https://www.mcbbs.co/favicon.ico
@@ -16,5 +16,6 @@
 // @grant        GM_addStyle
 // @run-at       document-body
 // @license      MIT
-// @downloadURL https://github.com/nicocatxzc/MCBBS-Extender/raw/refs/heads/main/mcbbs-extender.user.js
+// @downloadURL  https://github.com/nicocatxzc/MCBBS-Extender/releases/download/latest/mcbbs-extender.user.js
+// @updateURL    https://raw.githubusercontent.com/nicocatxzc/MCBBS-Extender/refs/heads/main/src/meta.js
 // ==/UserScript==

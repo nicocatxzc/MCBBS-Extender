@@ -35,7 +35,7 @@
         console.debug = function () {};
     }
     // 基本信息初始化
-    let version = "v2.2.4";
+    let version = "v2.2.5";
     let vercode = 121140;
     let valueList = {};
     let configList = [];
