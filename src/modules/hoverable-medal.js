@@ -37,6 +37,7 @@
     filter: blur(2px);
 }
 
+div.tip.tip_4[id*=_menu],
 div.tip.tip_4[id*=md_] {
     width: 105px;
     height: 165px;
@@ -51,6 +52,7 @@ div.tip.tip_4[id*=md_] {
     padding: 0px;
 }
 
+div.tip.tip_4[id*=_menu] .tip_horn,
 div.tip.tip_4[id*=md_] .tip_horn {
     background-size: cover;
     background-position: center;
@@ -62,16 +64,19 @@ div.tip.tip_4[id*=md_] .tip_horn {
     left: -50%;
 }
 
+div.tip.tip_4[id*=_menu] .tip_c,
 div.tip.tip_4[id*=md_] .tip_c {
     color: rgba(255, 255, 255, 0.98);
 }
 
+div.tip.tip_4[id*=_menu] h4,
 div.tip.tip_4[id*=md_] h4 {
     text-align: center;
     padding: 10px 5px;
     background-color: rgba(255, 255, 255, 0.3);
 }
 
+div.tip.tip_4[id*=_menu] p,
 div.tip.tip_4[id*=md_] p {
     padding: 0px 10px;
     position: absolute;
@@ -123,36 +128,79 @@ div.tip.tip_4[id*=md_] p {
                             .children(0)
                             .children("img")
                             .each((b, n) => {
-                                // 获得勋章ID
-                                let id = "md" + /\_\d*$/.exec(n.id)?.[0];
-                                if (id) {
-                                    // 重写勋章结构
-                                    $(v).append(
-                                        $(
-                                            '<span class="hoverable-medal" id="' +
-                                                n.id +
-                                                '" style="background-image:url(' +
-                                                n.src +
-                                                ')"></span>',
-                                        ).on("mouseover", () => {
-                                            showMenu({
-                                                ctrlid: n.id,
-                                                menuid: id + "_menu",
-                                                pos: "12!",
-                                            });
-                                        }),
+                                let medal = $(
+                                    '<span class="hoverable-medal"></span>',
+                                );
+
+                                medal.css("background-image", `url(${n.src})`);
+
+                                // 复制 id
+                                if (n.id) {
+                                    medal.attr("id", n.id);
+                                }
+
+                                // 第三方勋章
+                                if (n.getAttribute("tip")) {
+                                    medal.attr("tip", n.getAttribute("tip"));
+
+                                    medal.on("mouseover", function () {
+                                        MyshowTip(this);
+                                    });
+                                    $("#" + n.id + "_menu .tip_horn").css(
+                                        "background-image",
+                                        "url(" + n.src + ")",
                                     );
-                                    // 重写提示样式
+                                }
+                                // 官方勋章
+                                else {
+                                    let match = /\_\d+$/.exec(n.id);
+
+                                    if (!match) return;
+
+                                    let id = "md" + match[0];
+
+                                    medal.on("mouseover", () => {
+                                        showMenu({
+                                            ctrlid: n.id,
+                                            menuid: id + "_menu",
+                                            pos: "12!",
+                                        });
+                                    });
+
                                     $("#" + id + "_menu .tip_horn").css(
                                         "background-image",
                                         "url(" + n.src + ")",
                                     );
-                                    // 移除旧的勋章
-                                    n.remove();
                                 }
+
+                                $(v).append(medal);
+
+                                n.remove();
                             });
                     });
             };
+            // patch: 将论坛自定义勋章移动到原生勋章容器中
+            let patch = () => {
+                $(".md_ctrl.wodexunzhang_img").each((i, ext) => {
+                    if ($(ext).attr("merged-medal")) return;
+
+                    let favatar = $(ext).closest(".favatar");
+
+                    let target = favatar
+                        .find(".md_ctrl")
+                        .not(".wodexunzhang_img")
+                        .first();
+
+                    if (!target.length) return;
+
+                    $(ext).find("img").appendTo(target.find("a").first());
+
+                    $(ext).attr("merged-medal", "true");
+
+                    $(ext).remove();
+                });
+            };
+            $(patch);
             //调用重写勋章函数
             $(rewriteMedal);
             // 在Ajax时重新调用Ajax函数,保存勋章样式
