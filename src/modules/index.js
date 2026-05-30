@@ -29,6 +29,8 @@ import "./quick-at.js";
 import "./quick-rainbow.js";
 // 删除线按钮
 import "./quick-strike.js";
+// 首页滚动轮播
+import "./homepage-slide.js"
 // 自定义举豹理由
 import "./my-report-reason.js";
 // 自定义CSS
