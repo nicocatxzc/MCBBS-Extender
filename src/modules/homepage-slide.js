@@ -56,6 +56,9 @@
 }
         `,
         core: () => {
+            if(!document.querySelector(".slidebox li")) {
+                return;
+            }
             function patchSlide() {
                 dlg("已启用首页滚动轮播。");
 
