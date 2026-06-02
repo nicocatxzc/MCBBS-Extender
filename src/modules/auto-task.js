@@ -54,6 +54,7 @@
             };
 
             const checkTasks = async () => {
+                console.log("开始检查任务")
                 const page = await parsePageDOM(
                     "/home.php?mod=task&item=doing",
                 );
@@ -79,6 +80,20 @@
             }
 
             // 回帖后检查任务
+            const fastReplyfn = fastpostvalidate;
+            unsafeWindow.fastpostvalidate = function(...args) {
+                let result = fastReplyfn(...args)
+                checkTasks();
+                if(result) {
+                    setTimeout(100,()=>{
+                        checkTasks();
+                    })
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+            // ?疑似失效
             $(this).on(
                 "DiscuzAjaxGetFinished DiscuzAjaxPostFinished",
                 checkTasks,
