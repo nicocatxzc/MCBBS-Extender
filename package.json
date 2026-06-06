@@ -11,13 +11,6 @@
     "keywords": [],
     "author": "",
     "license": "MIT",
-    "devEngines": {
-        "packageManager": {
-            "name": "pnpm",
-            "version": "^11.1.2",
-            "onFail": "download"
-        }
-    },
     "type": "module",
     "devDependencies": {
         "@rollup/plugin-url": "^8.0.2",

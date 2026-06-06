@@ -5,12 +5,13 @@
     let dlg = MExt.debugLog;
     let Stg = MExt.ValueStorage;
     const isLogin = MExt.Units.isLogin;
-    const SIGN_DAY = "autoSignLastDate";
 
     const todayStr = () => {
-        const d = new Date();
-        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+        const d = new Date().toDateString();
+        return d;
     };
+
+    const TASK_DAY = "autoTaskLastDate";
 
     let autoTask = {
         runcase: () => MExt.ValueStorage.get("autoTask"),
@@ -33,8 +34,32 @@
             }
             const taskArr = ["1", "3", "18", "19", "25"];
 
+            const safeFetch = async (url, options = {}) => {
+                try {
+                    const res = await fetch(url, {
+                        credentials: "include",
+                        ...options,
+                    });
+
+                    if (!res.ok) {
+                        throw new Error(`${res.status} ${res.statusText}`);
+                    }
+
+                    return res;
+                } catch (err) {
+                    dlg(`请求失败: ${url}`);
+                    console.error(err);
+                    return null;
+                }
+            };
+
             const parsePageDOM = async (url) => {
-                const res = await fetch(url, { credentials: "include" });
+                const res = await safeFetch(url);
+
+                if (!res) {
+                    return null;
+                }
+
                 const html = await res.text();
                 return new DOMParser().parseFromString(html, "text/html");
             };
@@ -43,56 +68,81 @@
                 const page = await parsePageDOM("/home.php?mod=task&item=new");
                 if (!page) return;
 
+                const jobs = [];
+
                 taskArr.forEach((id) => {
                     const task = page.querySelector(
                         `a[href^="home.php?mod=task&do=apply&id=${id}"]`,
                     );
                     if (task) {
-                        fetch(`/home.php?mod=task&do=apply&id=${id}`);
+                        jobs.push(
+                            safeFetch(`/home.php?mod=task&do=apply&id=${id}`),
+                        );
                     }
                 });
+
+                const results = await Promise.allSettled(jobs);
+
+                const success = results.filter(
+                    (x) => x.status === "fulfilled",
+                ).length;
+
+                dlg(`已领取 ${success} 个任务`);
+
+                Stg.set(TASK_DAY, todayStr());
             };
 
             const checkTasks = async () => {
-                console.log("开始检查任务")
-                const page = await parsePageDOM(
-                    "/home.php?mod=task&item=doing",
-                );
-                if (!page) return;
+                try {
+                    console.log("开始检查任务");
+                    const page = await parsePageDOM(
+                        "/home.php?mod=task&item=doing",
+                    );
+                    if (!page) return;
 
-                taskArr.forEach((id) => {
-                    const task = page.querySelector(`#csc_${id}`);
+                    const jobs = [];
 
-                    if (!task) return;
+                    taskArr.forEach((id) => {
+                        const task = page.querySelector(`#csc_${id}`);
 
-                    if (
-                        task.innerHTML === "100" ||
-                        ["1", "3", "18"].includes(id)
-                    ) {
-                        fetch(`/home.php?mod=task&do=draw&id=${id}`);
-                    }
-                });
+                        if (!task) return;
+
+                        if (
+                            task.innerHTML === "100" ||
+                            ["1", "3", "18"].includes(id)
+                        ) {
+                            jobs.push(
+                                safeFetch(
+                                    `/home.php?mod=task&do=draw&id=${id}`,
+                                ),
+                            );
+                        }
+                    });
+
+                    await Promise.allSettled(jobs);
+                } catch (error) {
+                    console.err(error);
+                }
             };
 
             // 页面启动尝试领取
-            if (Stg.get(SIGN_DAY) !== todayStr()) {
+            if (Stg.get(TASK_DAY) !== todayStr()) {
                 applyTasks();
             }
 
             // 回帖后检查任务
             const fastReplyfn = fastpostvalidate;
-            unsafeWindow.fastpostvalidate = function(...args) {
-                let result = fastReplyfn(...args)
-                checkTasks();
-                if(result) {
-                    setTimeout(100,()=>{
-                        checkTasks();
-                    })
+            unsafeWindow.fastpostvalidate = function (...args) {
+                let result = fastReplyfn(...args);
+                setTimeout(() => {
+                    checkTasks();
+                }, 100);
+                if (result) {
                     return true;
                 } else {
                     return false;
                 }
-            }
+            };
             // ?疑似失效
             $(this).on(
                 "DiscuzAjaxGetFinished DiscuzAjaxPostFinished",
