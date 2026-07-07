@@ -5,7 +5,13 @@
     let dlg = MExt.debugLog;
     let animationGoToTop = {
         runcase: () => {
-            return MExt.ValueStorage.get("animateGoToTopButton");
+            let href = window.location.href
+            // 不适配门户页
+            if(href.endsWith("portal.php")) {
+                return false
+            } else {
+                return MExt.ValueStorage.get("animateGoToTopButton");
+            }
         },
         config: [
             {
