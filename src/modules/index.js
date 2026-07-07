@@ -31,6 +31,8 @@ import "./quick-rainbow.js";
 import "./quick-strike.js";
 // 首页滚动轮播
 import "./homepage-slide.js"
+// 恢复首页门户
+import "./revert-to-homepage.js"
 // 自定义举豹理由
 import "./my-report-reason.js";
 // 自定义CSS
