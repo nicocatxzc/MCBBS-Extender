@@ -1,10 +1,10 @@
-// Module: restrictMedalLine
+// Module: revertPortalToHomepage
 (() => {
     let MExt = unsafeWindow.MExt;
     let $ = MExt.jQuery;
     let dlg = MExt.debugLog;
     let Stg = MExt.ValueStorage;
-    let restrictMedalLine = {
+    let revertPortalToHomepage = {
         runcase: () => {
             return MExt.ValueStorage.get("revertPortalToHomepage");
         },
@@ -35,5 +35,5 @@
             });
         },
     };
-    MExt.exportModule(restrictMedalLine);
+    MExt.exportModule(revertPortalToHomepage);
 })();
