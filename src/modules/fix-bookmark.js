@@ -36,23 +36,27 @@
 
             $(() => {
                 const scroll = document.querySelector("#scrolltop");
-                
+
                 const head = document.querySelector(".mc_map_border_top");
                 const body = document.querySelector(".mc_map_border_left");
                 const footer = document.querySelector(".mc_map_border_foot");
-                
+
                 body.appendChild(scroll);
 
                 const container = document.querySelector(".mc_map_wp");
 
-                const height =
-                    head.getBoundingClientRect().height +
-                    body.getBoundingClientRect().height +
-                    footer.getBoundingClientRect().height;
+                const resizeObserver = new ResizeObserver(() => {
+                    const height =
+                        head.getBoundingClientRect().height +
+                        body.getBoundingClientRect().height +
+                        footer.getBoundingClientRect().height;
 
-                container.style.height = `${height}px`;
-                container.style.minHeight = `100dvh`
-                console.log(height);
+                    container.style.height = `${height}px`;
+                });
+
+                resizeObserver.observe(body);
+
+                container.style.minHeight = `100dvh`;
             });
         },
     };
