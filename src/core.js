@@ -97,56 +97,6 @@
         }
         return false;
     };
-    // $("").on("DOMNodeInserted", ); polyfill实现
-    let observe = function (selector, callback, options = {}) {
-        const { subtree = true, once = false } = options;
-
-        let target = document.querySelector(selector);
-        let innerObserver = null;
-
-        const bindObserver = () => {
-            if (!target) return;
-
-            // 防止重复绑定
-            if (innerObserver) return;
-
-            innerObserver = new MutationObserver((mutations) => {
-                callback(target, mutations);
-
-                if (once) {
-                    innerObserver.disconnect();
-                }
-            });
-
-            innerObserver.observe(target, {
-                childList: true,
-                subtree,
-            });
-        };
-
-        // 初始查找
-        bindObserver();
-
-        // 如果目标未来才出现
-        const rootObserver = new MutationObserver(() => {
-            if (!target) {
-                target = document.querySelector(selector);
-                bindObserver();
-            }
-        });
-
-        rootObserver.observe(document.body, {
-            childList: true,
-            subtree: true,
-        });
-
-        return {
-            disconnect() {
-                innerObserver?.disconnect();
-                rootObserver.disconnect();
-            },
-        };
-    };
 
     // 钩住DiscuzAjax函数,使其触发全局事件
     let __ajaxpost = ajaxpost;
@@ -175,46 +125,6 @@
     };
     dlg("已注入Discuz ajax");
 
-    // 编辑器小按钮行列
-    const getEditorRows = (() => {
-        function ensureId(el, index) {
-            if (!el.id) {
-                el.id = "e_adv_s3_row_" + index;
-            }
-        }
-
-        function resolve() {
-            const container = document.querySelector("#e_adv_s3");
-            if (!container) return null;
-
-            const rows = Array.from(container.querySelectorAll(":scope > p"));
-
-            // 从后往前找最后一个 a 数量 < 2 的
-            for (let i = rows.length - 1; i >= 0; i--) {
-                const aCount = rows[i].querySelectorAll(":scope > a").length;
-                if (aCount < 2) {
-                    ensureId(rows[i], i);
-                    return {
-                        element: rows[i],
-                        selector: "#" + rows[i].id,
-                    };
-                }
-            }
-
-            // 没有可用列，创建新列
-            const newRow = document.createElement("p");
-            container.appendChild(newRow);
-            ensureId(newRow, rows.length);
-
-            return {
-                element: newRow,
-                selector: "#" + newRow.id,
-            };
-        }
-
-        return resolve;
-    })();
-
     const isLogin = document.querySelector(
         'a[href^="member.php?mod=logging&action=login"]',
     )
@@ -230,7 +140,6 @@
         },
         exportModule: exportModule,
         debugLog: dlg,
-        observe,
         versionName: version,
         versionCode: vercode,
         jQuery: $,
@@ -238,7 +147,6 @@
         Units: {
             appendStyle: appendStyle,
             getRequest: getRequest,
-            getEditorRows,
             isLogin,
         },
     };

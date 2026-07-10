@@ -3,7 +3,7 @@
     let MExt = unsafeWindow.MExt;
     let $ = MExt.jQuery;
     let dlg = MExt.debugLog;
-    let observe = MExt.observe;
+    let observe = MExt.Units.observe;
     let quickStrike = {
         runcase: () => {
             return MExt.ValueStorage.get("quickStrike");

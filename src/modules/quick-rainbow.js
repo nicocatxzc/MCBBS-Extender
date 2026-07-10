@@ -4,7 +4,7 @@
     let $ = MExt.jQuery;
     let dlg = MExt.debugLog;
     let Stg = MExt.ValueStorage;
-    let observe = MExt.observe;
+    let observe = MExt.Units.observe;
     let quickRainbow = {
         runcase: () => {
             return MExt.ValueStorage.get("quickRainbow");

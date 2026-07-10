@@ -1,5 +1,7 @@
 // 载入核心运行时
 import './core.js'
+// 载入工具
+import './utils.js'
 // 载入静态资源
 import './assets.js'
 // 载入设置面板
