@@ -51,6 +51,7 @@
                     footer.getBoundingClientRect().height;
 
                 container.style.height = `${height}px`;
+                container.style.minHeight = `100dvh`
                 console.log(height);
             });
         },
