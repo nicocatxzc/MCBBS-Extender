@@ -17,29 +17,62 @@
             },
         ],
         core: () => {
+            Object.defineProperty(unsafeWindow, "forLinks", {
+                value: "null",
+                writable: false,
+                configurable: false,
+                enumerable: true,
+            });
+
             if (typeof unsafeWindow.jumpToExternalLink === "function") {
                 const __jump = unsafeWindow.jumpToExternalLink;
 
-                unsafeWindow.jumpToExternalLink = function (link) {
-                    try {
-                        const u = new URL(link, location.href);
+                Object.defineProperty(unsafeWindow, "jumpToExternalLink", {
+                    value: (link) => {
+                        try {
+                            const u = new URL(link, location.href);
 
-                        if (
-                            /^https?:$/.test(u.protocol) &&
-                            u.host !== location.host
-                        ) {
-                            window.open(
-                                u.href,
-                                "_blank",
-                                "noopener,noreferrer",
-                            );
-                            dlg("已尝试覆写外链提示方法。");
-                            return;
-                        }
-                    } catch {}
+                            if (
+                                /^https?:$/.test(u.protocol) &&
+                                u.host !== location.host
+                            ) {
+                                window.open(
+                                    u.href,
+                                    "_blank",
+                                    "noopener,noreferrer",
+                                );
+                                dlg("已尝试覆写外链提示方法。");
+                                return;
+                            }
+                        } catch {}
 
-                    return __jump.apply(this, arguments);
-                };
+                        return __jump.apply(this, arguments);
+                    },
+                    writable: false,
+                    configurable: false,
+                    enumerable: true,
+                });
+
+                // unsafeWindow.jumpToExternalLink = function (link) {
+                //     try {
+                //         const u = new URL(link, location.href);
+
+                //         if (
+                //             /^https?:$/.test(u.protocol) &&
+                //             u.host !== location.host
+                //         ) {
+                //             window.open(
+                //                 u.href,
+                //                 "_blank",
+                //                 "noopener,noreferrer",
+                //             );
+                //             dlg("已尝试覆写外链提示方法。");
+                //             return;
+                //         }
+                //     } catch {}
+
+                //     return __jump.apply(this, arguments);
+                // };
             }
 
             const isExternal = (href) => {
