@@ -23,6 +23,8 @@ import "./restrict-medal-line.js";
 import "./animation-go-to-top.js";
 // 修复书签定位
 import "./fix-bookmark.js"
+// 移除听天命
+import "./remove-fortun.js"
 // 后台轮询消息
 import "./query-message.js";
 // @按钮
