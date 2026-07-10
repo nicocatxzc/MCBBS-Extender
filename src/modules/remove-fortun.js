@@ -18,7 +18,6 @@
             },
         ],
         style: /* css */ `
-// css
 `,
         core: () => {
             // start

@@ -20,9 +20,7 @@
         ],
         style:
             /*css */ `#fastpostrainbow, #postrainbow,#e_rbn_s1 {
-background-image: url(` +
-            MExt.staticRes.rainbowBtnImage +
-            `);
+background-image: url(${MExt.staticRes.rainbowBtnImage});
 background-size: 28px;
 background-position: center top;
 }
