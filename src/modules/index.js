@@ -41,6 +41,8 @@ import "./revert-to-homepage.js"
 import "./my-report-reason.js";
 // 自定义CSS
 import "./my-css.js";
+// 自定义背景图
+import "./custom-background.js"
 // 自定义工具栏链接
 import "./my-links.js";
 // 杂项修复
