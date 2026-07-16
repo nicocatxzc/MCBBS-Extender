@@ -67,17 +67,26 @@
             /**
              * 保存草稿
              */
-            MExt.advDraft.save = function (id, title, content) {
+            MExt.advDraft.save = function (id, title) {
                 let drafts = loadStore();
+
+                const currEditor = unsafeWindow?.wysiwyg ?? 1;
+
+                const switchEditor = unsafeWindow.switchEditor;
+
+                if (switchEditor) switchEditor(0);
 
                 drafts[id] = {
                     id: id,
                     title: title,
-                    content: content,
+                    content: unsafeWindow.advDraftTextarea.value,
                     time: Date.now(),
                 };
 
+                if (switchEditor) switchEditor(currEditor);
+
                 saveStore(drafts);
+
             };
 
             /**
@@ -116,7 +125,7 @@
 
                 if (switchEditor) switchEditor(0);
 
-                let ta = window.advDraftTextarea;
+                let ta = unsafeWindow.advDraftTextarea;
 
                 if (ta) {
                     ta.value = drafts[id].content;
@@ -151,7 +160,7 @@
                     function () {
                         let drafts = loadStore();
 
-                        let ta = window.advDraftTextarea;
+                        let ta = unsafeWindow.advDraftTextarea;
 
                         if (!drafts[id] || !ta) return;
 
@@ -193,7 +202,7 @@
                 console.log(`已识别到的编辑器实例：`, textarea);
                 if (!textarea) return;
 
-                window.advDraftTextarea = textarea;
+                unsafeWindow.advDraftTextarea = textarea;
 
                 const control = document.createElement("li");
 
@@ -270,7 +279,7 @@
                  */
                 MExt.advDraft.new = function () {
                     let id = String(Date.now());
-                    MExt.advDraft.save(id, "新建草稿", textarea.value);
+                    MExt.advDraft.save(id, "新建草稿");
                     if (window.advDraftRefresh) advDraftRefresh();
                 };
 
@@ -288,7 +297,7 @@
 
                     lastAutoSave = Date.now();
 
-                    MExt.advDraft.save("AUTODRAFT", "自动保存", textarea.value);
+                    MExt.advDraft.save("AUTODRAFT", "自动保存");
                 }, 1000);
             });
         },
