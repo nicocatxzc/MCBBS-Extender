@@ -152,24 +152,13 @@
             /**
              * 覆盖
              */
-            MExt.advDraft.cover = function (id) {
+            MExt.advDraft.cover = function (id,title) {
                 unsafeWindow.showDialog(
                     "确定使用当前编辑器内容覆盖该草稿吗？",
                     "confirm",
                     "覆盖草稿",
                     function () {
-                        let drafts = loadStore();
-
-                        let ta = unsafeWindow.advDraftTextarea;
-
-                        if (!drafts[id] || !ta) return;
-
-                        drafts[id].content = ta.value;
-                        drafts[id].time = Date.now();
-
-                        saveStore(drafts);
-
-                        advDraftRefresh();
+                        MExt.advDraft.save(id,title)
                     },
                 );
             };
@@ -253,7 +242,7 @@
                                 </td>
                                 <td>
                                 <button onclick="MExt.advDraft.preview('${d.id}')">预览</button>
-                                <button onclick="MExt.advDraft.cover('${d.id}')">覆盖</button>
+                                <button onclick="MExt.advDraft.cover('${d.id}','${d.title}')">覆盖</button>
                                 <button onclick="MExt.advDraft.use('${d.id}')">使用</button>
                                 <button onclick="MExt.advDraft.remove('${d.id}')">删除</button>
                                 </td>
