@@ -33,6 +33,8 @@ import "./quick-at.js";
 import "./quick-rainbow.js";
 // 删除线按钮
 import "./quick-strike.js";
+// 高级草稿箱
+import "./editor-draft.js"
 // 首页滚动轮播
 import "./homepage-slide.js"
 // 恢复首页门户
