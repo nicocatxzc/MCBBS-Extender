@@ -1,8 +1,7 @@
 // Update Manager
 (() => {
     let updatelist = [
-        `插件原作者团队：<a href="https://github.com/Proj-MExt" target="_blank">Proj-MExt</a>`,
-        "这是移植的第一版插件，未知或无效的功能已被禁用，可能仍然存在许多问题，欢迎随时反馈！",
+        `新增了高级草稿箱功能，可以随时保存草稿或者常用发帖模板。`,
     ];
     unsafeWindow.MExt.exportModule({
         core: () => {
@@ -15,7 +14,7 @@
                     unsafeWindow.MExt.versionCode,
                 );
                 showDialog(
-                    "<b>欢迎使用MCBBS Extender</b>.<br>本脚本的设置按钮已经放进入了您的个人信息菜单里,如需调整设置请在个人信息菜单里查看.<br><b>这是移植的第一版插件，未知或无效的功能已被禁用，可能仍然存在许多问题，欢迎随时反馈！</b><br>",
+                    "<b>欢迎使用MCBBS Extender</b>.<br>本脚本的设置按钮已经放进入了您的个人信息菜单里,如需调整设置请在个人信息菜单里查看.<br><b>该插件由原MCBBS Extender移植而来，未知或无效的功能已被禁用，可能仍然存在许多问题，欢迎随时反馈！</b><br>",
                     "right",
                     "欢迎",
                     () => {
