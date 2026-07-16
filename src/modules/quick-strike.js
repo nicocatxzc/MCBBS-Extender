@@ -107,8 +107,8 @@
 
                 const row = MExt.Units.getEditorRows();
                 if (row?.element) {
-                    console.log(row.element);
-                    console.log(editorBtn);
+                    // console.log(row.element);
+                    // console.log(editorBtn);
                     row.element.append(editorBtn);
                 }
             });
