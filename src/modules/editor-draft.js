@@ -76,12 +76,14 @@
 
                 if (switchEditor) switchEditor(0);
 
-                drafts[id] = {
-                    id: id,
-                    title: title,
-                    content: unsafeWindow.advDraftTextarea.value,
-                    time: Date.now(),
-                };
+                if(unsafeWindow.advDraftTextarea?.value.length > 5) { // 防止保存空内容
+                    drafts[id] = {
+                        id: id,
+                        title: title,
+                        content: unsafeWindow.advDraftTextarea.value,
+                        time: Date.now(),
+                    };
+                }
 
                 if (switchEditor) switchEditor(currEditor);
 
