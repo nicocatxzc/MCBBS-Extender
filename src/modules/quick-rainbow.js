@@ -67,7 +67,7 @@ background-position: center;
                 btn.addEventListener("click", rainbowFloat);
                 btn.innerText = "彩虹文字";
                 $("#postat.fat").after(btn);
-                dlg("Reply bottons appends.");
+                dlg("Reply buttons appends.");
             };
             // $("#append_parent").on("DOMNodeInserted", hookReplyBtn);
             observe("#append_parent", hookReplyBtn);
