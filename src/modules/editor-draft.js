@@ -4,6 +4,7 @@
     let $ = MExt.jQuery;
     let dlg = MExt.debugLog;
     let Stg = MExt.ValueStorage;
+    let observe = MExt.Units.observe;
 
     let module = {
         runcase: () => {
@@ -76,7 +77,8 @@
 
                 if (switchEditor) switchEditor(0);
 
-                if(unsafeWindow.advDraftTextarea?.value.length > 5) { // 防止保存空内容
+                if (unsafeWindow.advDraftTextarea?.value.length > 5) {
+                    // 防止保存空内容
                     drafts[id] = {
                         id: id,
                         title: title,
@@ -88,7 +90,6 @@
                 if (switchEditor) switchEditor(currEditor);
 
                 saveStore(drafts);
-
             };
 
             /**
@@ -154,13 +155,13 @@
             /**
              * 覆盖
              */
-            MExt.advDraft.cover = function (id,title) {
+            MExt.advDraft.cover = function (id, title) {
                 unsafeWindow.showDialog(
                     "确定使用当前编辑器内容覆盖该草稿吗？",
                     "confirm",
                     "覆盖草稿",
                     function () {
-                        MExt.advDraft.save(id,title)
+                        MExt.advDraft.save(id, title);
                     },
                 );
             };
@@ -194,6 +195,24 @@
                 if (!textarea) return;
 
                 unsafeWindow.advDraftTextarea = textarea;
+
+                if (simple) {
+                    let fastpost = textarea;
+                    let reply = null;
+                    observe("#append_parent", () => {
+                        let reply = document.querySelector(
+                            "#fwin_reply textarea",
+                        );
+                        if (reply) {
+                            // 回复
+                            unsafeWindow.advDraftTextarea = reply;
+                            dlg("检测到回复窗口");
+                        } else {
+                            unsafeWindow.advDraftTextarea = fastpost;
+                        }
+                        console.log(textarea);
+                    });
+                }
 
                 const control = document.createElement("li");
 
