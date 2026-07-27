@@ -1,7 +1,7 @@
 (() => {
     let ShouldRun = true;
     // jQuery检查
-    if (typeof jQuery == "undefined") {
+    if (typeof unsafeWindow.jQuery == "undefined") {
         console.error(
             "This page does NOT contain JQuery,MCBBS Extender will not work.",
         );
@@ -50,22 +50,9 @@
         valueList = {};
         localStorage.setItem("MExt_config", "{}");
     }
-    // 导出模块
-    let exportModule = (...modules) => {
-        if (!ShouldRun) {
-            return;
-        }
-        for (let m of modules) {
-            try {
-                moduleLoader(m);
-            } catch (e) {
-                console.error(
-                    "Error occurred while try to load a module:\n" + e,
-                );
-            }
-        }
-    };
+
     let $ = unsafeWindow.jQuery;
+
     let dlg = (m) => {
         console.debug("[MCBBS Extender]" + m);
     };
@@ -131,28 +118,6 @@
         ? false
         : true;
 
-    // 对外暴露API
-    let MExt = {
-        ValueStorage: {
-            get: getValue,
-            set: setValue,
-            delete: deleteValue,
-        },
-        exportModule: exportModule,
-        debugLog: dlg,
-        versionName: version,
-        versionCode: vercode,
-        jQuery: $,
-        configList: configList,
-        Units: {
-            appendStyle: appendStyle,
-            getRequest: getRequest,
-            isLogin,
-        },
-    };
-    unsafeWindow.MExt = MExt;
-    dlg("核心已加载");
-
     // 模块加载器
     let moduleLoader = (module) => {
         // 载入配置项
@@ -178,7 +143,75 @@
         }
         // 运行模块Core
         if (typeof module.core == "function") {
-            module.core();
+            module.core($);
         }
     };
+
+    let trueJQ = true; // jquery版本需要确认
+
+    let MExtModules = [];
+
+    try {
+        // 需要确认的方法
+        unsafeWindow.jQuery("body")?.on(() => {});
+        dlg("jQuery检查通过");
+        console.log(unsafeWindow.jQuery());
+    } catch (err) {
+        trueJQ = false; // 方法校验不通过
+        const script = document.createElement("script");
+        script.src = "/template/mcbbs_v2/images/js/jquery-3.7.1.min.js?mext";
+        script.onload = () => {
+            $ = unsafeWindow.jQuery.noConflict();
+            trueJQ = true;
+            dlg("jQuery更新成功");
+            console.log($());
+            while (MExtModules.length) {
+                const module = MExtModules.shift();
+                exportModule(module);
+            }
+        };
+        document.body.appendChild(script);
+    }
+
+    // 导出模块
+    let exportModule = (...modules) => {
+        if (!ShouldRun) {
+            return;
+        }
+        if (trueJQ) {
+            for (let m of modules) {
+                try {
+                    moduleLoader(m);
+                } catch (e) {
+                    console.error("加载模块时发生错误:\n" + e);
+                }
+            }
+        } else {
+            MExtModules.push(...modules);
+        }
+    };
+
+    // 对外暴露API
+    let MExt = {
+        ValueStorage: {
+            get: getValue,
+            set: setValue,
+            delete: deleteValue,
+        },
+        exportModule: exportModule,
+        debugLog: dlg,
+        versionName: version,
+        versionCode: vercode,
+        get jQuery() {
+            return $;
+        },
+        configList: configList,
+        Units: {
+            appendStyle: appendStyle,
+            getRequest: getRequest,
+            isLogin,
+        },
+    };
+    unsafeWindow.MExt = MExt;
+    dlg("核心已加载");
 })();

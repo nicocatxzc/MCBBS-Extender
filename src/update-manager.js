@@ -4,7 +4,7 @@
         `新增了高级草稿箱功能，可以随时保存草稿或者常用发帖模板。`,
     ];
     unsafeWindow.MExt.exportModule({
-        core: () => {
+        core: ($) => {
             if (
                 typeof unsafeWindow.MExt.ValueStorage.get("LastVersion") ==
                 "undefined"

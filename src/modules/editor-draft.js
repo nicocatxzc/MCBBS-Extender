@@ -51,7 +51,7 @@
             }
         `,
 
-        core: () => {
+        core: ($) => {
             dlg("已启用高级草稿箱。");
 
             const STORE = "advDraft";

@@ -16,7 +16,7 @@
                 desc: "去除论坛跳转外链时的警告页面.",
             },
         ],
-        core: () => {
+        core: ($) => {
             Object.defineProperty(unsafeWindow, "forLinks", {
                 value: "null",
                 writable: false,

@@ -17,7 +17,7 @@
                 desc: "在举报时提供自定义的举报理由,一行一个理由.",
             },
         ],
-        core: () => {
+        core: ($) => {
             let reportReason = Stg.get("myReportReason").split("\n");
             const customReasons = [
                 "广告垃圾",

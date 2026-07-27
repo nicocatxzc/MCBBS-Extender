@@ -35,7 +35,7 @@ html {
     scroll-behavior: smooth;
 }
 `,
-        core: () => {
+        core: ($) => {
             let __showTopLink = unsafeWindow.showTopLink;
 
             unsafeWindow.showTopLink = (...args) => {

@@ -31,7 +31,7 @@
             background-size: 50px;
             background-position: -6px 2px;
         }`,
-        core: () => {
+        core: ($) => {
             let getAtCode = () => {
                 // 分隔list
                 let quickAtList = Stg.get("quickAtList").split(",");

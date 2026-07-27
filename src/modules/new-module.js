@@ -20,7 +20,7 @@
         style: /* css */ `
 // css
 `,
-        core: () => {
+        core: ($) => {
             // start
             dlg("Module enabled。");
 

@@ -108,7 +108,7 @@ pre:not([id]) code br{
     display: none;
 }
 `,
-        core: () => {
+        core: ($) => {
             // 构建代码行计数器
             let LnBuilder = (ln) => {
                 let str = "";

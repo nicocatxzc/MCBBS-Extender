@@ -28,7 +28,7 @@ background-position: center top;
 background-size: 16px;
 background-position: center;
 }`,
-        core: () => {
+        core: ($) => {
             let rainbowFast = () => {
                 let target = document.getElementById("fastpostmessage");
                 if (target.selectionStart != target.selectionEnd) {

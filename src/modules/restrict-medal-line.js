@@ -49,7 +49,7 @@
             max-height: 3000px!important;
             padding-bottom: 40px;
         }`,
-        core: () => {
+        core: ($) => {
             let restrict = () => {
                 // 判断是否在个人主页
                 if ($("#uhd").length > 0) {

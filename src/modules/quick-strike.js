@@ -23,7 +23,7 @@
             background-position: -20px -60px;
         }
         `,
-        core: () => {
+        core: ($) => {
             const wrapStrike = (str, type = 0) => {
                 if (!str) return "";
                 if (type === 0) {

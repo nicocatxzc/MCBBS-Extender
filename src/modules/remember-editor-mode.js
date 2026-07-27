@@ -16,7 +16,7 @@
                 desc: "记忆高级编辑器是纯文本模式还是即时模式.",
             },
         ],
-        core: () => {
+        core: ($) => {
             if (localStorage.getItem("MExt_EditMode") === null) {
                 localStorage.setItem("MExt_EditMode", "false");
             }

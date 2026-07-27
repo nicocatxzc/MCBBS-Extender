@@ -18,7 +18,7 @@
             },
         ],
         style: "",
-        core: () => {
+        core: ($) => {
             let fixconf = Stg.get("miscFix").split("");
             let fixlist = [
                 //修复用户组页面不对齐的问题

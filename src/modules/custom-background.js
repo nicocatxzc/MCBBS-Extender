@@ -28,7 +28,7 @@
         style: /* css */ `
 // css
 `,
-        core: () => {
+        core: ($) => {
             // start
             dlg("Module enabled。");
 
@@ -73,7 +73,6 @@
                 });
                 // 配置背景
                 const config = MExt.ValueStorage.get("customBackground");
-                console.log(config)
                 if (config) {
                     const body = document.querySelector("#body_fixed_bg");
                     console.log(body)

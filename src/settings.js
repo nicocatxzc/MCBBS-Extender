@@ -64,7 +64,7 @@
             resize: vertical;
             min-height: 50px;
         }`,
-        core: () => {
+        core: ($) => {
             let getRequest = MExt.Units.getRequest;
             $(() => {
                 // 发送警告

@@ -55,7 +55,7 @@
     display:none!important;
 }
         `,
-        core: () => {
+        core: ($) => {
             if(!document.querySelector(".slidebox li")) {
                 return;
             }

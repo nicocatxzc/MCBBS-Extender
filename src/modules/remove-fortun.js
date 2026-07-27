@@ -19,7 +19,7 @@
         ],
         style: /* css */ `
 `,
-        core: () => {
+        core: ($) => {
             // start
             dlg("已移除听天命。");
 

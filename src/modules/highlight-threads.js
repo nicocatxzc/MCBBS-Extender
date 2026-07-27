@@ -81,7 +81,7 @@
     background-color: rgba(0, 153, 204, 0.3)!important;
     border-left: 3px solid rgb(0, 153, 204);
 }`,
-        core: () => {
+        core: ($) => {
             let highlighting = () => {
                 $('#moderate a[title*="有新回复"]')
                     .parent()

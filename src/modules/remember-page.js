@@ -16,7 +16,7 @@
                 desc: "点击板块内下一页按钮时记忆当前页.",
             },
         ],
-        core: () => {
+        core: ($) => {
             $(() => {
                 let npbtn = $("#autopbn");
                 if (npbtn.length) {
