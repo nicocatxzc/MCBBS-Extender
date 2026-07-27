@@ -1,7 +1,7 @@
 // Update Manager
 (() => {
     let updatelist = [
-        `新增了高级草稿箱功能，可以随时保存草稿或者常用发帖模板。`,
+        `修复了一些问题。`,
     ];
     unsafeWindow.MExt.exportModule({
         core: ($) => {
