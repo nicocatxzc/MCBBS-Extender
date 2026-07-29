@@ -1,7 +1,7 @@
 {
     "name": "MCBBS-Extender",
-    "version": "2.7.3",
-    "description": "",
+    "version": "2.8.1",
+    "description": "一个适用于MCBBS纪念版的TamperMonkey脚本",
     "main": "index.js",
     "scripts": {
         "build": "rollup -c rollup.config.mjs",
