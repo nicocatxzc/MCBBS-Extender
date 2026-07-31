@@ -225,7 +225,10 @@
                 control.onclick = () => {
                     let html = /*html*/ `
                         <div>
-                        <h3>草稿箱</h3>
+                        <h3 class="flb">
+                        <em>草稿箱</em>
+                        <span><a href="javascript:;" class="flbc" onclick="hideWindow(\'draft-box\')" title="关闭">关闭</a></span>
+                        </h3>
                         <label>
                         <input type="checkbox" id="advDraftAuto">
                         自动保存草稿
@@ -248,7 +251,8 @@
                         </div>
                     `;
 
-                    unsafeWindow.showDialog(html, "info");
+                    // unsafeWindow.showDialog(html, "info","草稿箱");
+                    unsafeWindow.showWindow("draft-box",html,'html')
 
                     window.advDraftRefresh = function () {
                         let rows = document.querySelector("#advDraftRows");
