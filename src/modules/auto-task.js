@@ -89,17 +89,21 @@
 
                 dlg(`已领取 ${success} 个任务`);
 
-                const dailyTask = await parsePageDOM("/home.php?mod=task&do=view&id=1")
-                if(dailyTask) {
-                    const dailyPost = dailyTask?.querySelector(".taskbtn.taskda")
-                    if(dailyPost.onclick) {
-                        dlg("每日任务尚未领取，将继续检查任务情况")
+                const dailyTask = await parsePageDOM(
+                    "/home.php?mod=task&do=view&id=1",
+                );
+                if (dailyTask) {
+                    const dailyPost = Array.from(
+                        dailyTask?.querySelectorAll("a") ?? [],
+                    ).find((a) => a?.innerText.trim() === "领取奖励");
+                    if (dailyPost.onclick) {
+                        dlg("每日任务尚未领取，将继续检查任务情况");
                         return;
                     } else {
                         Stg.set(TASK_DAY, todayStr());
                     }
                 } else {
-                    dlg("每日任务检查失败，将继续检查任务情况")
+                    dlg("每日任务检查失败，将继续检查任务情况");
                 }
             };
 
