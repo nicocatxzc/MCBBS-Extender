@@ -146,18 +146,23 @@
             }
 
             // 回帖后检查任务
-            const fastReplyfn = fastpostvalidate;
-            unsafeWindow.fastpostvalidate = function (...args) {
-                let result = fastReplyfn(...args);
-                setTimeout(() => {
-                    checkTasks();
-                }, 100);
-                if (result) {
-                    return true;
-                } else {
-                    return false;
-                }
-            };
+            if (unsafeWindow?.fastpostvalidate) {
+                const fastReplyfn = fastpostvalidate;
+                unsafeWindow.fastpostvalidate = function (...args) {
+                    let result = fastReplyfn(...args);
+                    setTimeout(() => {
+                        checkTasks();
+                    }, 100);
+                    if (result) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                };
+            } else {
+                console.log("当前不在回帖页");
+            }
+
             // ?疑似失效
             $(this).on(
                 "DiscuzAjaxGetFinished DiscuzAjaxPostFinished",
