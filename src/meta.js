@@ -16,6 +16,6 @@
 // @grant        GM_addStyle
 // @run-at       document-body
 // @license      MIT
-// @downloadURL  https://github.com/nicocatxzc/MCBBS-Extender/releases/download/latest/mcbbs-extender.user.js
+// @downloadURL  https://update.greasyfork.org/scripts/588774/MCBBS%20Extender.user.js
 // @updateURL    https://raw.githubusercontent.com/nicocatxzc/MCBBS-Extender/refs/heads/main/src/meta.js
 // ==/UserScript==
