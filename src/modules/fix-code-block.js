@@ -109,6 +109,7 @@ pre:not([id]) code br{
 }
 `,
         core: ($) => {
+            dlg("美化代码块样式已启用")
             // 构建代码行计数器
             let LnBuilder = (ln) => {
                 let str = "";

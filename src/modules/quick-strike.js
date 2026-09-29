@@ -24,6 +24,7 @@
         }
         `,
         core: ($) => {
+            dlg("快速删除线已启用");
             const wrapStrike = (str, type = 0) => {
                 if (!str) return "";
                 if (type === 0) {

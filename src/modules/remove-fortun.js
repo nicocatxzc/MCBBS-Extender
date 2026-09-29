@@ -21,12 +21,12 @@
 `,
         core: ($) => {
             // start
-            dlg("已移除听天命。");
+            dlg("已移除听天命");
 
             $(() => {
-                const fortune = document.querySelector(".fortune-choutie")
-                if(fortune) {
-                    fortune.remove()
+                const fortune = document.querySelector(".fortune-choutie");
+                if (fortune) {
+                    fortune.remove();
                 }
             });
         },

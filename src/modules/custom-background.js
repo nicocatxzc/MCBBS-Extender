@@ -30,7 +30,7 @@
 `,
         core: ($) => {
             // start
-            dlg("Module enabled。");
+            dlg("自定义背景已启用");
 
             const BACKGROUND_KEY = "MExt_custom_background";
             async function openFilePicker() {

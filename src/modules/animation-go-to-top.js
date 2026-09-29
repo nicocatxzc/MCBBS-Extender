@@ -36,6 +36,7 @@ html {
 }
 `,
         core: ($) => {
+            dlg("回到顶部已启用")
             let __showTopLink = unsafeWindow.showTopLink;
 
             unsafeWindow.showTopLink = (...args) => {

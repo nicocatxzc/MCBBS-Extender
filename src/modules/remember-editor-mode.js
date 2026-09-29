@@ -17,6 +17,7 @@
             },
         ],
         core: ($) => {
+            dlg("记忆编辑器模式已启用");
             if (localStorage.getItem("MExt_EditMode") === null) {
                 localStorage.setItem("MExt_EditMode", "false");
             }

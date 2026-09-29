@@ -57,7 +57,7 @@
                     return;
                 }
                 // 限制勋章行数
-                dlg("已启用限制勋章行数。");
+                dlg("限制勋章行数已启用");
                 $(".md_ctrl:not([restrictline])")
                     .attr("restrictline", "true")
                     .append(

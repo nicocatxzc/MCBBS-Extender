@@ -18,6 +18,7 @@
             },
         ],
         core: ($) => {
+            dlg("自定义举报理由已启用")
             let reportReason = Stg.get("myReportReason").split("\n");
             const customReasons = [
                 "广告垃圾",

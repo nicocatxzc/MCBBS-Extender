@@ -18,6 +18,7 @@
             },
         ],
         core: ($) => {
+            dlg("自定义工具菜单链接已启用")
             // 分割
             $(Stg.get("myLinks").split("\n")).each((i, v) => {
                 try {

@@ -17,6 +17,7 @@
             },
         ],
         core: ($) => {
+            dlg("板块内翻页记忆已启用");
             $(() => {
                 let npbtn = $("#autopbn");
                 if (npbtn.length) {

@@ -113,6 +113,7 @@ div.tip.tip_4[id*=md_] p:not(.wode_shuxing p) {
     display:none;
 }`,
         core: ($) => {
+            dlg("玻璃质感勋章已启用")
             let rewriteMedal = () => {
                 // 遍历所有未重写楼层
                 $(".md_ctrl:not([glassmedal])")

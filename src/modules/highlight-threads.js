@@ -82,6 +82,7 @@
     border-left: 3px solid rgb(0, 153, 204);
 }`,
         core: ($) => {
+            dlg("帖子列表高亮已启用")
             let highlighting = () => {
                 $('#moderate a[title*="有新回复"]')
                     .parent()

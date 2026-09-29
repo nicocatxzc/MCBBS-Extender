@@ -56,12 +56,11 @@
 }
         `,
         core: ($) => {
+            dlg("滚动首页轮播已启用")
             if(!document.querySelector(".slidebox li")) {
                 return;
             }
             function patchSlide() {
-                dlg("已启用首页滚动轮播。");
-
                 console.log(unsafeWindow.slideshow?.entities);
                 if (!unsafeWindow.slideshow?.entities) {
                     setTimeout(patchSlide, 100);

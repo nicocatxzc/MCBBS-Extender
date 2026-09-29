@@ -17,6 +17,7 @@
             },
         ],
         core: ($) => {
+            dlg("移除外链警告已启用");
             Object.defineProperty(unsafeWindow, "forLinks", {
                 value: "null",
                 writable: false,

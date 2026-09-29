@@ -20,7 +20,7 @@
         style: /* css */ ``,
         core: ($) => {
             // start
-            dlg("已启用回退导航栏首页。");
+            dlg("回退导航栏首页已启用");
 
             $(() => {
                 let portal = document.querySelector(

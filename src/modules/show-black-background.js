@@ -25,7 +25,7 @@
         `,
 
         core: ($) => {
-            dlg("显示黑幕已启用。");
+            dlg("显示黑幕已启用");
             function channelToLinear(value) {
                 const c = value / 255;
                 return c <= 0.03928

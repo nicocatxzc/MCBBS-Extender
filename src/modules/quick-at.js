@@ -32,6 +32,7 @@
             background-position: -6px 2px;
         }`,
         core: ($) => {
+            dlg("快速@列表已启用");
             let getAtCode = () => {
                 // 分隔list
                 let quickAtList = Stg.get("quickAtList").split(",");

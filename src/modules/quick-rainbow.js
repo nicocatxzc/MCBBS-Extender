@@ -29,6 +29,7 @@ background-size: 16px;
 background-position: center;
 }`,
         core: ($) => {
+            dlg("编辑器支持彩虹文字已启用")
             let rainbowFast = () => {
                 let target = document.getElementById("fastpostmessage");
                 if (target.selectionStart != target.selectionEnd) {

@@ -32,7 +32,7 @@
 `,
         core: ($) => {
             // start
-            dlg("已启用修复书签定位。");
+            dlg("修复书签定位已启用");
 
             $(() => {
                 const scroll = document.querySelector("#scrolltop");
