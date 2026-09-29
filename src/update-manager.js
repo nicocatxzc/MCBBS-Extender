@@ -1,7 +1,8 @@
 // Update Manager
 (() => {
     let updatelist = [
-        `修复了一些问题。`,
+        `修复自动签到：等待页面元素加载完成后再执行，并在服务端确认签到成功后才记录日期。`,
+        `新增后台静默签到：无需跳转签到页即可自动完成签到（可在设置中关闭）。`,
     ];
     unsafeWindow.MExt.exportModule({
         core: ($) => {
