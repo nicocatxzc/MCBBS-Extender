@@ -35,8 +35,8 @@
         console.debug = function () {};
     }
     // 基本信息初始化
-    let version = "v2.8.5";
-    let vercode = 121305;
+    let version = "v2.8.6";
+    let vercode = 121306;
     let valueList = {};
     let configList = [];
     // 加载ValueStorage

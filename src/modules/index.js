@@ -3,6 +3,8 @@
 import "./auto-sign.js";
 // 自动领取任务
 import "./auto-task.js";
+// 自动水贴
+import "./auto-water.js";
 // 移除外站警告
 import "./remove-link-warn.js";
 // 帖子高亮

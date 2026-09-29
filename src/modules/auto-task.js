@@ -140,6 +140,9 @@
                 }
             };
 
+            // 对外暴露，供其他模块（如自动水贴）联动触发
+            MExt.autoTask = { applyTasks, checkTasks };
+
             // 页面启动尝试领取
             if (Stg.get(TASK_DAY) !== todayStr()) {
                 applyTasks();
