@@ -1,4 +1,5 @@
 import indexedDB from "./utils/db";
+import discuz from "./utils/discuz";
 import getEditorRows from "./utils/getEditorRows";
 import observe from "./utils/observe";
 
@@ -7,6 +8,7 @@ import observe from "./utils/observe";
     MExt.Units = {
         ...MExt.Units,
         indexedDB,
+        discuz,
         observe,
         getEditorRows,
     };

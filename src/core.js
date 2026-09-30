@@ -35,8 +35,8 @@
         console.debug = function () {};
     }
     // 基本信息初始化
-    let version = "v2.8.6";
-    let vercode = 121306;
+    let version = "v3.0.0";
+    let vercode = 130000;
     let valueList = {};
     let configList = [];
     // 加载ValueStorage
@@ -94,7 +94,7 @@
             } else {
                 eval(recall);
             }
-            $(this).trigger("DiscuzAjaxPostFinished");
+            $(document).trigger("DiscuzAjaxPostFinished");
         };
         __ajaxpost(formid, showid, waitid, showidclass, submitbtn, relfunc);
     };
@@ -106,7 +106,7 @@
             } else {
                 eval(recall);
             }
-            $(this).trigger("DiscuzAjaxGetFinished");
+            $(document).trigger("DiscuzAjaxGetFinished");
         };
         __ajaxget(url, showid, waitid, loading, display, relfunc);
     };

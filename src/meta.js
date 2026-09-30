@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MCBBS Extender
 // @namespace    https://nicocat.cc
-// @version      release-2.8.6
+// @version      release-3.0.0
 // @description  MCBBS行为拓展/样式修复
 // @author       nicocat
 // @icon         https://www.mcbbs.co/favicon.ico
